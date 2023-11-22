@@ -1,5 +1,5 @@
 return {
-  "olimorris/onedarkpro.nvim",
+  "rose-pine/neovim",
   lazy = false,
   priority = 1000,
 }
