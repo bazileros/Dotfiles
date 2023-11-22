@@ -1,4 +1,5 @@
-# 💤 LazyVim
+# 💤 Neovim conf
 
-A starter template for [LazyVim](https://github.com/LazyVim/LazyVim).
-Refer to the [documentation](https://lazyvim.github.io/installation) to get started.
+Refer to the [Bazileros](https://github.com/bazileros) to get started.
+
+i built this on top off [lazyvim](https://github.com/lazyvim/lazyvim)
