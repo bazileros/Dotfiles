@@ -4,6 +4,26 @@ Refer to the [Bazileros](https://github.com/bazileros) to get started.
 
 I built this on top off [lazyvim](https://github.com/lazyvim/lazyvim)
 
+## 🦕 Getting started
+1. Install Neovim
+```bash
+sudo snap install nvim --classic
+```
+2. Backup your current Neovim config
+```bash
+# required
+mv ~/.config/nvim{,.bak}
+
+# optional but recommended
+mv ~/.local/share/nvim{,.bak}
+mv ~/.local/state/nvim{,.bak}
+mv ~/.cache/nvim{,.bak}
+```
+3. Clone this repo
+```bash
+git clone https://github.com/bazileros/Dotfiles.git ~/ && cd ~/Dotfiles && mv nvim ~/.config
+```
+
 ## Project Structure
 
 The project is organized into the following directories:
