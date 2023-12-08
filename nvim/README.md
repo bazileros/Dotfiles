@@ -1,15 +1,20 @@
 # 💤 Neovim conf
 
+![Neovim](./image.png)
 Refer to the [Bazileros](https://github.com/bazileros) to get started.
 
 I built this on top off [lazyvim](https://github.com/lazyvim/lazyvim)
 
 ## 🦕 Getting started
+
 1. Install Neovim
+
 ```bash
 sudo snap install nvim --classic
 ```
+
 2. Backup your current Neovim config
+
 ```bash
 # required
 mv ~/.config/nvim{,.bak}
@@ -19,7 +24,9 @@ mv ~/.local/share/nvim{,.bak}
 mv ~/.local/state/nvim{,.bak}
 mv ~/.cache/nvim{,.bak}
 ```
+
 3. Clone this repo
+
 ```bash
 git clone https://github.com/bazileros/Dotfiles.git ~/ && cd ~/Dotfiles && mv nvim ~/.config
 ```
@@ -29,12 +36,15 @@ git clone https://github.com/bazileros/Dotfiles.git ~/ && cd ~/Dotfiles && mv nv
 The project is organized into the following directories:
 
 - **ftdetect:** Neovim filetype detection configuration.
+
   - `kitty.vim`: Filetype detection settings for Kitty terminal.
 
 - **ftplugin:** Neovim filetype plugin configuration.
+
   - `kitty.vim`: Filetype plugin settings for Kitty terminal.
 
 - **lua:** Lua modules for configuration.
+
   - **config:**
     - `autocmds.lua`: Autocommands configuration.
     - `keymaps.lua`: Keymaps configuration.
@@ -58,6 +68,7 @@ The project is organized into the following directories:
 - `stylua.toml`: Stylua configuration file.
 
 - **syntax:** Syntax highlighting configuration.
+
   - `kitty-session.vim`: Kitty terminal config syntax highlighting.
   - `kitty.vim`: Kitty terminal syntax highlighting.
 
@@ -66,6 +77,3 @@ The project is organized into the following directories:
 ## Usage
 
 This Neovim configuration is structured to enhance your coding experience. Follow the README files in each directory for detailed information on the configuration and usage.
-
-
-
