@@ -21,8 +21,8 @@ log "✅ Updating package lists..." "$GREEN"
 pkg update -y && pkg upgrade -y
 
 # Install necessary packages
-log "✅ Installing wget, unzip, and fontconfig..." "$GREEN"
-pkg install -y wget unzip fontconfig
+log "✅ Installing wget, unzip, and lsd..." "$GREEN"
+pkg install -y wget unzip lsd
 
 # Create ~/.fonts directory if it doesn't exist
 log "✅ Creating fonts directory..." "$GREEN"
@@ -53,13 +53,15 @@ log "✅ Installing the font..." "$GREEN"
 unzip -o "$temp_zip" -d "$HOME/.fonts/"
 rm "$temp_zip" # Clean up the zip file
 
+log '📭 Moving JetBrainsMonoNLNerdFont-ExtraBold.ttf to ~/.termux as font.tff' "$GREEN"
+cp ~/.fonts/JetBrainsMonoNLNerdFont-ExtraBold.ttf ~/.termux/font.ttf
 # Update font cache (check if fc-cache exists)
-if command -v fc-cache &>/dev/null; then
-  log "✅ Updating font cache..." "$GREEN"
-  fc-cache -vf ~/.fonts/
-else
-  log "❌ Error: fc-cache command not found. Ensure fontconfig is installed correctly." "$RED"
-  exit 1
-fi
+#if command -v fc-cache &>/dev/null; then
+#  log "✅ Updating font cache..." "$GREEN"
+#  fc-cache -vf ~/.fonts/
+#else
+#  log "❌ Error: fc-cache command not found. Ensure fontconfig is installed correctly." "$RED"
+#  exit 1
+#fi
 
 log "😁😁 JetBrains Mono Nerd Font installation completed successfully." "$GREEN"
