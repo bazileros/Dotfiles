@@ -3,6 +3,7 @@
 # Color definitions for logging
 GREEN="\033[0;32m"
 RED="\033[0;31m"
+YELLOW="\033[0;33m"
 RESET="\033[0m"
 
 # Function to check command success
@@ -40,7 +41,7 @@ if [ ! -f ~/.config/code-server/config.yaml ]; then
     echo "bind-addr: localhost:8080" > ~/.config/code-server/config.yaml
     echo "auth: password" >> ~/.config/code-server/config.yaml
     echo "password: password" >> ~/.config/code-server/config.yaml # Default password, change as needed
-    echo "cert: no" >> ~/.config/code-server/config.yaml # Default password, change as needed
+    echo "cert: no" >> ~/.config/code-server/config.yaml # Default setting for SSL certificate
 else
     echo -e "${YELLOW}⚠️ config.yaml already exists. Please update the password manually if needed.${RESET}"
 fi
@@ -56,7 +57,7 @@ if [[ "$shell_choice" == "zsh" ]]; then
     alias_file="$HOME/.oh-my-zsh/custom/aliases.zsh"
     echo "alias code='./path/to/code-server --auth none'" >> "$alias_file"
     echo -e "${GREEN}✅ Added alias 'code' to $alias_file.${RESET}"
-elif [[ "$shell_choice" == "bash" ]; then
+elif [[ "$shell_choice" == "bash" ]]; then
     # Create or append to .bashrc file for Bash users
     echo "alias code='./path/to/code-server --auth none'" >> "$HOME/.bashrc"
     echo -e "${GREEN}✅ Added alias 'code' to ~/.bashrc.${RESET}"
