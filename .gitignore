@@ -1,1 +1,4 @@
 .env/
+termux/start-ubuntu.sh
+termux/ubuntu-fs/
+termux/ubuntu.sh
