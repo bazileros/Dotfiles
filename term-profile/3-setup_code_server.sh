@@ -49,17 +49,21 @@ fi
 # Open config.yaml in vim for manual editing
 vim ~/.config/code-server/config.yaml
 
+# Get the current script's directory to set a dynamic path for code-server executable
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+code_server_path="$script_dir/code-server"
+
 # Prompt user for shell choice to set up alias
 read -p "Which shell are you using? (bash/zsh): " shell_choice
 
 if [[ "$shell_choice" == "zsh" ]]; then
     # Create or append to aliases.zsh file for Zsh users
     alias_file="$HOME/.oh-my-zsh/custom/aliases.zsh"
-    echo "alias code='./path/to/code-server --auth none'" >> "$alias_file"
+    echo "alias code='$code_server_path --auth none'" >> "$alias_file"
     echo -e "${GREEN}✅ Added alias 'code' to $alias_file.${RESET}"
 elif [[ "$shell_choice" == "bash" ]]; then
     # Create or append to .bashrc file for Bash users
-    echo "alias code='./path/to/code-server --auth none'" >> "$HOME/.bashrc"
+    echo "alias code='$code_server_path --auth none'" >> "$HOME/.bashrc"
     echo -e "${GREEN}✅ Added alias 'code' to ~/.bashrc.${RESET}"
 else
     echo -e "${RED}❌ Invalid shell choice. No alias added.${RESET}"
@@ -72,7 +76,7 @@ read -p "Do you want to run Code-Server now? (y/n): " run_now
 
 if [[ "$run_now" == "y" ]]; then
     echo -e "${GREEN}✅ Starting Code-Server...${RESET}"
-    ./code-server --auth none &
+    $code_server_path --auth none &
 else
     echo -e "${GREEN}😁 Setup completed successfully! You can access Code-Server later using the alias.${RESET}"
 fi
