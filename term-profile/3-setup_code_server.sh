@@ -7,10 +7,10 @@ RESET="\033[0m"
 
 # Function to check command success
 check_success() {
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}Error occurred during the last command.${RESET}"
-    exit 1
-  fi
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Error occurred during the last command.${RESET}"
+        exit 1
+    fi
 }
 
 # Update Ubuntu packages and install additional tools
@@ -34,7 +34,18 @@ cd "code-server-${latest_code_server:1}-linux-arm64/bin" || { echo "Failed to en
 
 # Configure Code-Server (update password in config.yaml)
 mkdir -p ~/.config/code-server
-echo -e "${GREEN}✅ Configuring Code-Server...${RESET}"
+
+# Check if config.yaml already exists and create it if not
+if [ ! -f ~/.config/code-server/config.yaml ]; then
+    echo "bind-addr: localhost:8080" > ~/.config/code-server/config.yaml
+    echo "auth: password" >> ~/.config/code-server/config.yaml
+    echo "password: password" >> ~/.config/code-server/config.yaml # Default password, change as needed
+    echo "cert: no" >> ~/.config/code-server/config.yaml # Default password, change as needed
+else
+    echo -e "${YELLOW}⚠️ config.yaml already exists. Please update the password manually if needed.${RESET}"
+fi
+
+# Open config.yaml in vim for manual editing
 vim ~/.config/code-server/config.yaml
 
 # Prompt user for shell choice to set up alias
@@ -45,7 +56,7 @@ if [[ "$shell_choice" == "zsh" ]]; then
     alias_file="$HOME/.oh-my-zsh/custom/aliases.zsh"
     echo "alias code='./path/to/code-server --auth none'" >> "$alias_file"
     echo -e "${GREEN}✅ Added alias 'code' to $alias_file.${RESET}"
-elif [[ "$shell_choice" == "bash" ]]; then
+elif [[ "$shell_choice" == "bash" ]; then
     # Create or append to .bashrc file for Bash users
     echo "alias code='./path/to/code-server --auth none'" >> "$HOME/.bashrc"
     echo -e "${GREEN}✅ Added alias 'code' to ~/.bashrc.${RESET}"
