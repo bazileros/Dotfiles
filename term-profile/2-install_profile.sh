@@ -10,11 +10,11 @@ echo "✅ Cloning zsh-autosuggestions plugin..."
 
 # Replace the configs with the saved one.
 echo "✅ Copying .zshrc..."
-sudo cp configs/.zshrc ~/.zshrc
+cp configs/.zshrc ~/.zshrc
 
 # Copy the modified Agnoster Theme
 echo "✅ Copying erosdevs-agnoster.zsh-theme..."
-sudo cp configs/erosdevs-agnoster.zsh-theme ~/.oh-my-zsh/themes/erosdevs-agnoster.zsh-theme
+cp configs/erosdevs-agnoster.zsh-theme ~/.oh-my-zsh/themes/erosdevs-agnoster.zsh-theme
 
 # Color Theme
 echo "✅ Loading terminal profile..."
