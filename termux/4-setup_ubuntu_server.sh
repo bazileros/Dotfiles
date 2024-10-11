@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh  # Ensure this script runs in Zsh
 
 # Color definitions for logging
 GREEN="\033[0;32m"
@@ -42,20 +42,23 @@ read -p "Do you want to start Ubuntu now? (y/n): " start_now
 
 if [[ "$start_now" == "y" ]]; then
     echo -e "${GREEN}✅ Starting Ubuntu...${RESET}"
-    ./start-ubuntu.sh &
+    bash "$CONFIG_DIR/start-ubuntu.sh" &
 else
-    echo -e "${GREEN}🔄 You can start Ubuntu later by running './start-ubuntu.sh' in your Termux environment.${RESET}"
+    echo -e "${GREEN}🔄 You can start Ubuntu later by running 'bash $CONFIG_DIR/start-ubuntu.sh' in your Termux environment.${RESET}"
 fi
 
 # Create alias for starting the Ubuntu server in .zshrc or .bashrc
 read -p "Which shell are you using? (bash/zsh): " shell_choice
 
+# Get the current working directory for dynamic alias creation
+current_dir=$(pwd)
+
 if [[ "$shell_choice" == "zsh" ]]; then
     alias_file="$HOME/.oh-my-zsh/custom/aliases.zsh"
-    echo "alias ubuntu='bash $CONFIG_DIR/start-ubuntu.sh'" >> "$alias_file"
+    echo "alias ubuntu='bash \"$current_dir/start-ubuntu.sh\"'" >> "$alias_file"
     echo -e "${GREEN}✅ Added alias 'ubuntu' to $alias_file.${RESET}"
 elif [[ "$shell_choice" == "bash" ]]; then
-    echo "alias ubuntu='bash $CONFIG_DIR/start'" >> "$HOME/.bashrc"
+    echo "alias ubuntu='bash \"$current_dir/start-ubuntu.sh\"'" >> "$HOME/.bashrc"
     echo -e "${GREEN}✅ Added alias 'ubuntu' to ~/.bashrc.${RESET}"
 else
     echo -e "${RED}❌ Invalid shell choice. No alias added.${RESET}"
