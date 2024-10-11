@@ -52,7 +52,7 @@ read -p "Which shell are you using? (bash/zsh): " shell_choice
 
 if [[ "$shell_choice" == "zsh" ]]; then
     alias_file="$HOME/.oh-my-zsh/custom/aliases.zsh"
-    echo "alias ubuntu='bash $CONFIG_DIR/start'" >> "$alias_file"
+    echo "alias ubuntu='bash $CONFIG_DIR/start-ubuntu.sh'" >> "$alias_file"
     echo -e "${GREEN}✅ Added alias 'ubuntu' to $alias_file.${RESET}"
 elif [[ "$shell_choice" == "bash" ]]; then
     echo "alias ubuntu='bash $CONFIG_DIR/start'" >> "$HOME/.bashrc"
