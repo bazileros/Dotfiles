@@ -23,6 +23,10 @@ export default [
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
     },
+	  module.exports = {
+  ignorePatterns: ['/*', '!/src'],
+  // other configurations...
+};
     rules: {
       ...js.configs.recommended.rules,
       ...react.configs.recommended.rules,
