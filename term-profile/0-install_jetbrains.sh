@@ -18,11 +18,11 @@ log() {
 
 # Update and upgrade packages
 log "✅ Updating package lists..." "$GREEN"
-apt update -y && apt upgrade -y
+# apt update -y && apt upgrade -y
 
 # Install necessary packages
 log "✅ Installing wget, unzip, and lsd..." "$GREEN"
-apt install -y wget unzip lsd
+sudo pacman -S wget unzip lsd
 
 # Create ~/.fonts directory if it doesn't exist
 log "✅ Creating fonts directory..." "$GREEN"
