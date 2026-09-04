@@ -1,0 +1,79 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "shell": "/bin/zsh",
+  "model": "opencode-go/deepseek-v4-flash",
+  "plugin": [
+    "@dietrichgebert/ponytail",
+    "oh-my-opencode-slim",
+    "envsitter-guard",
+    "@tarquinen/opencode-dcp@^3.1.15",
+    "opencode-notify"
+  ],
+  "mcp": {
+    "better-t-stack": {
+      "type": "local",
+      "command": [
+        "bunx",
+        "create-better-t-stack@latest",
+        "mcp"
+      ],
+      "enabled": true,
+      "environment": {}
+    },
+    "context7": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "enabled": true,
+      "environment": {}
+    },
+    "cloudflare-docs": {
+      "type": "remote",
+      "url": "https://docs.mcp.cloudflare.com/sse",
+      "enabled": true
+    },
+    "shadcn": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "shadcn@latest",
+        "mcp"
+      ],
+      "enabled": true,
+      "environment": {}
+    },
+    "better-auth": {
+      "type": "remote",
+      "url": "https://mcp.inkeep.com/better-auth/mcp",
+      "enabled": true
+    },
+    "convex": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "convex@latest",
+        "mcp",
+        "start"
+      ],
+      "enabled": true,
+      "environment": {}
+    },
+    "paystack": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@paystack/mcp-server"
+      ],
+      "enabled": true,
+      "environment": {
+        "PAYSTACK_TEST_SECRET_KEY": "{env:PAYSTACK_TEST_SECRET_KEY}"
+      }
+    }
+  }
+}

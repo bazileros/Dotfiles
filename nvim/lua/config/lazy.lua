@@ -28,6 +28,8 @@ require("lazy").setup({
   },
   install = { colorscheme = { "tokyonight", "habamax" } },
   checker = { enabled = false }, -- automatically check for plugin updates
+  -- keep the lockfile in-repo (default is the data dir)
+  lockfile = vim.fn.stdpath("config") .. "/lazy-lock.json",
   performance = {
     rtp = {
       -- disable some rtp plugins

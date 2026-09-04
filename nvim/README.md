@@ -1,79 +1,96 @@
-# 💤 Neovim conf
+# 💤 Neovim config (LazyVim)
 
 ![Neovim](./image.png)
-Refer to the [Bazileros](https://github.com/bazileros) to get started.
 
-I built this on top off [lazyvim](https://github.com/lazyvim/lazyvim)
+A [LazyVim](https://github.com/LazyVim/LazyVim)-based Neovim configuration.
+The layout matches the current LazyVim starter exactly (`lua/config/` +
+`lua/plugins/`), so there is nothing to merge when upstream changes — LazyVim
+is just a plugin, updated in place.
 
-## 🦕 Getting started
+## Requirements
 
-1. Install Neovim
+- Neovim >= 0.11.2 (LazyVim v16)
+- `git` (lazy.nvim bootstrap and plugin management)
+- Kitty filetype support ships in-repo (`ftdetect/`, `ftplugin/`, `syntax/`)
 
-```bash
-sudo snap install nvim --classic
+## Getting started
+
+1. Back up any existing config, then deploy this repo as your config:
+
+   ```bash
+   mv ~/.config/nvim{,.bak}
+   # optional but recommended
+   mv ~/.local/share/nvim{,.bak}
+   mv ~/.local/state/nvim{,.bak}
+   mv ~/.cache/nvim{,.bak}
+
+   git clone <this-repo> ~/.config/nvim   # or symlink the nvim/ dir from Dotfiles
+   ```
+
+2. First launch bootstraps lazy.nvim, installs all plugins, and runs
+   `:Lazy health` checks. Then:
+
+   - `:Lazy` — plugin manager (status / install / update)
+   - `:Lazy health` — verify the setup
+   - `:Mason` — language servers / formatters / linters
+
+## Project structure
+
+- `init.lua` — entry point: bootstraps LazyVim, sets the active colorscheme
+  (NeoSolarized; commented alternatives: catppuccin-mocha, kanagawa)
+- `lua/config/lazy.lua` — lazy.nvim setup: imports LazyVim, the
+  `mini-animate` extra, and your `lua/plugins/` specs. Pins the plugin
+  lockfile to this repo (`lazy-lock.json`)
+- `lua/config/options.lua` — Neovim options (winbar)
+- `lua/config/keymaps.lua` — custom keymaps
+- `lua/config/autocmds.lua` — custom autocommands + line-number options
+- `lua/plugins/` — per-plugin specs:
+  - `NeoSolarized.lua`, `catppuccin.lua`, `Kanagawa.lua` — the three kept
+    colorschemes (see `init.lua` to switch)
+  - `noice.lua` — disables noice/nvim-notify notifications
+  - `codeium.lua` — Codeium AI completions (`<C-a>`, `<C-g>`, `<M-a>`, `<M-g>`, `<M-x>`)
+  - `copilot.lua` — GitHub Copilot (`:Copilot`)
+  - `tailwindcss.lua` — tailwindcss LSP + colorizer
+  - `Haproxy.lua` — HAProxy syntax highlighting
+- `ftdetect/`, `ftplugin/`, `syntax/` — kitty terminal filetype support
+  (independent of LazyVim, keep as-is)
+
+## Updating (merge-free)
+
+LazyVim is not vendored here — it is a plugin. The starter layout this config
+mirrors is frozen upstream, so updating is a single command, a few times a
+year:
+
+```vim
+:Lazy update
 ```
 
-2. Backup your current Neovim config
+Then, for anything that changed:
+
+- skim the LazyVim release notes / `:Lazy news` for breaking changes,
+- run `:checkhealth` to confirm nothing regressed (especially after Neovim
+  or LazyVim minor releases).
+
+`lazy-lock.json` pins every plugin's exact commit. It is kept **in this repo**
+(lazy.nvim's default is the data dir; the `lockfile` option in
+`lua/config/lazy.lua` points it at the config). After an update, commit the
+updated lockfile so reinstalls are reproducible.
+
+## Safety net: upstream LazyVim starter
+
+Nothing in this repo forks or patches LazyVim internals; the LazyVim plugin
+itself always tracks upstream `main` via `:Lazy update`. The upstream starter
+([LazyVim/starter](https://github.com/LazyVim/starter)) is intentionally **not**
+configured as a git remote — if you ever want to diff against it:
 
 ```bash
-# required
-mv ~/.config/nvim{,.bak}
-
-# optional but recommended
-mv ~/.local/share/nvim{,.bak}
-mv ~/.local/state/nvim{,.bak}
-mv ~/.cache/nvim{,.bak}
+git remote add starter https://github.com/LazyVim/starter
+git fetch starter
+git diff starter/main -- nvim/
 ```
 
-3. Clone this repo
+## Notes
 
-```bash
-git clone https://github.com/bazileros/Dotfiles.git ~/ && cd ~/Dotfiles && mv nvim ~/.config
-```
-
-## Project Structure
-
-The project is organized into the following directories:
-
-- **ftdetect:** Neovim filetype detection configuration.
-
-  - `kitty.vim`: Filetype detection settings for Kitty terminal.
-
-- **ftplugin:** Neovim filetype plugin configuration.
-
-  - `kitty.vim`: Filetype plugin settings for Kitty terminal.
-
-- **lua:** Lua modules for configuration.
-
-  - **config:**
-    - `autocmds.lua`: Autocommands configuration.
-    - `keymaps.lua`: Keymaps configuration.
-    - `lazy.lua`: Lazy loading configuration.
-    - `options.lua`: General options configuration.
-  - **plugins:**
-    - `catppucin.lua`: Configuration for the Catppuccin color scheme.
-    - `codeium.lua`: Configuration for the Codeium plugin.
-    - `Gruvbox.lua`: Configuration for the Gruvbox color scheme.
-    - `Kanagawa.lua`: Configuration for the Kanagawa color scheme.
-    - `Malange.lua`: Configuration for the Malange color scheme.
-    - `NeoSolarized.lua`: Configuration for the NeoSolarized color scheme.
-    - `nightfly.lua`: Configuration for the Nightfly color scheme.
-    - `Nyoom.lua`: Configuration for the Nyoom color scheme.
-    - `onedarkpro.lua`: Configuration for the One Dark Pro color scheme.
-    - `rose_pine.lua`: Configuration for the Rose Pine color scheme.
-
-- `init.lua`: Neovim main configuration file.
-- `lazy-lock.json`: Lazygit configuration for Neovim.
-- `lazyvim.json`: Lazyvim configuration for Neovim.
-- `stylua.toml`: Stylua configuration file.
-
-- **syntax:** Syntax highlighting configuration.
-
-  - `kitty-session.vim`: Kitty terminal config syntax highlighting.
-  - `kitty.vim`: Kitty terminal syntax highlighting.
-
-- `README.md`: Additional information and instructions for Neovim configuration.
-
-## Usage
-
-This Neovim configuration is structured to enhance your coding experience. Follow the README files in each directory for detailed information on the configuration and usage.
+- `lazyvim.json` is auto-generated LazyVim state (extras list) — do not
+  hand-edit; it is gitignored.
+- Neovim >= 0.11 enables truecolor by default; no `termguicolors` shims needed.

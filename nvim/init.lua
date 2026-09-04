@@ -1,18 +1,9 @@
 -- bootstrap lazy.nvim, LazyVim and your plugins
 require("config.lazy")
 
-vim.opt.termguicolors = true
-vim.g.nightflyTransparent = true
+-- Active colorscheme (kept themes are declared in lua/plugins/)
+-- vim.cmd.colorscheme("NeoSolarized")
 
--- Colorschemess Section
-
---vim.cmd("colorscheme onedark")
-vim.cmd("colorscheme NeoSolarized")
---vim.cmd("colorscheme rose-pine")
---vim.cmd("colorscheme catppuccin-mocha")
--- vim.cmd("colorscheme melange")
---vim.cmd("colorscheme nightfly")
---vim.cmd("colorscheme kanagawa")
---vim.cmd("colorscheme gruvbox")
--- vim.cmd("colorscheme nyoom")
---vim.cmd("colorscheme monokai-pro")
+-- Alternatives (switch here; the theme specs are already installed):
+vim.cmd.colorscheme("catppuccin-mocha")
+-- vim.cmd.colorscheme("kanagawa")
