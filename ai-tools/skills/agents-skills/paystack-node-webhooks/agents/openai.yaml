@@ -1,4 +1,0 @@
-interface:
-  display_name: "Paystack Node Webhooks"
-  short_description: "Verify Paystack webhooks in Node"
-  default_prompt: "Use $paystack-node-webhooks to verify and handle Paystack webhooks in Node."
