@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+# install/bootstrap — idempotent dotfiles symlink bootstrap (Linux/macOS)
+#
+#   install/bootstrap            apply
+#   install/bootstrap --dry-run  print the plan, change nothing
+#
+# Per-target policy:
+#   missing target              -> create symlink (parent dirs created)
+#   symlink already -> repo     -> skip (already done)
+#   broken symlink              -> replace
+#   real file/dir or foreign symlink -> move aside to <target>.bak[.N] + warn
+#                                      (never clobber silently)
+#
+# Windows: run this inside WSL. On a native Windows shell it prints mklink
+# hints instead of doing anything.
+
+set -euo pipefail
+
+DRY_RUN=false
+case "${1:-}" in
+  --dry-run) DRY_RUN=true ;;
+  -h|--help)
+    sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'
+    exit 0
+    ;;
+esac
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(dirname "$SCRIPT_DIR")"
+
+case "${OSTYPE:-}" in
+  msys*|mingw*|cygwin*)
+    echo "bootstrap: native Windows shell detected — Unix symlinks don't apply here."
+    echo "Run inside WSL (clone the repo there, then ./install/bootstrap), or link"
+    echo "manually from an admin prompt, e.g.:"
+    echo '  mklink /D "%USERPROFILE%\.config\nvim"   "C:\path\to\Dotfiles\nvim"'
+    exit 1
+    ;;
+esac
+
+info() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
+ok()   { printf '\033[32m  + \033[0m%s\n' "$*"; }
+warn() { printf '\033[33m  ! \033[0m%s\n' "$*" >&2; }
+
+created=0
+skipped=0
+backed_up=0
+
+rel() { printf '~%s' "${1#"$HOME"}"; }
+
+backup_path() {                 # $1 dest -> first free <dest>.bak[.N]
+  local d="$1.bak" n=2
+  while [ -e "$d" ]; do d="$1.bak.$n"; n=$((n + 1)); done
+  printf '%s' "$d"
+}
+
+# link <path-in-repo> <absolute-dest>
+link() {
+  local rel="$1" dest="$2"
+  local src="$REPO/$rel"
+
+  if [ ! -e "$src" ] && [ ! -L "$src" ]; then
+    warn "$rel is missing from the repo — skipped"
+    return
+  fi
+
+  if [ -L "$dest" ]; then
+    if [ "$(readlink "$dest")" = "$src" ]; then
+      skipped=$((skipped + 1))
+      ok "skip   $(rel "$dest") — already a link to the repo"
+      return
+    elif [ -e "$dest" ]; then
+      # valid symlink pointing somewhere else: treat as a real file, back it up
+      local bak
+      bak="$(backup_path "$dest")"
+      backed_up=$((backed_up + 1))
+      warn "$(rel "$dest") is a foreign symlink — backing up to $(rel "$bak")"
+      if $DRY_RUN; then
+        info "would  replace $(rel "$dest") -> $src"
+      else
+        mv "$dest" "$bak"
+        mkdir -p "$(dirname "$dest")"
+        ln -s "$src" "$dest"
+        ok "linked $(rel "$dest")"
+      fi
+      return
+    fi
+    # broken symlink: falls through to replace
+    if $DRY_RUN; then
+      info "would  replace broken symlink $(rel "$dest") -> $src"
+    else
+      rm "$dest"
+      mkdir -p "$(dirname "$dest")"
+      ln -s "$src" "$dest"
+      ok "linked $(rel "$dest") (replaced broken link)"
+    fi
+    return
+  fi
+
+  if [ -e "$dest" ]; then
+    local bak
+    bak="$(backup_path "$dest")"
+    backed_up=$((backed_up + 1))
+    warn "$(rel "$dest") exists as a real file/dir — backing up to $(rel "$bak")"
+    if $DRY_RUN; then
+      info "would  replace $(rel "$dest") -> $src"
+    else
+      mv "$dest" "$bak"
+      mkdir -p "$(dirname "$dest")"
+      ln -s "$src" "$dest"
+      ok "linked $(rel "$dest")"
+    fi
+    return
+  fi
+
+  created=$((created + 1))
+  if $DRY_RUN; then
+    info "would  link $(rel "$dest") -> $src"
+  else
+    mkdir -p "$(dirname "$dest")"
+    ln -s "$src" "$dest"
+    ok "linked $(rel "$dest")"
+  fi
+}
+
+info "dotfiles bootstrap"
+info "repo: $REPO"
+if $DRY_RUN; then
+  warn "dry run — nothing will be changed"
+fi
+if [ -n "${PREFIX:-}" ] && [[ "$PREFIX" == /data/data/com.termux* ]]; then
+  warn "Termux detected: the kitty link is inert on Android — remove ~/.config/kitty if unwanted"
+fi
+
+# --- config dirs -----------------------------------------------------------
+link "nvim"          "$HOME/.config/nvim"
+link "kitty"         "$HOME/.config/kitty"
+# opencode: link ONLY opencode.json, not the whole dir — ~/.config/opencode
+# holds runtime state (skills/, .oh-my-opencode-slim manifest, node_modules,
+# ponytail's .ponytail-active) that must NOT be written into the git repo.
+link "opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+link "oh-my-posh"    "$HOME/.config/oh-my-posh"
+link "fastfetch"     "$HOME/.config/fastfetch"
+
+# --- agent skill dirs ------------------------------------------------------
+link "agents-skills" "$HOME/.agents/skills"
+link "claude-skills" "$HOME/.claude/skills"
+
+# --- shell files ------------------------------------------------------------
+link "aliases/aliases.sh" "$HOME/.aliases"
+link "zshrc"              "$HOME/.zshrc"
+link "bashrc"             "$HOME/.bashrc"
+
+info "summary: $created would be/created, $skipped already correct, $backed_up backed up"

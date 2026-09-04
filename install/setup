@@ -1,0 +1,388 @@
+#!/usr/bin/env bash
+# install/setup — cross-platform setup entry point.
+#
+#   install/setup                interactive: pick steps (gum checkbox → space to
+#                                toggle, or plain y/n prompts), confirm, run.
+#   install/setup --apply        run every step without prompts (CI, WSL, docs)
+#   install/setup piped/non-tty  prints the plan (dry run), changes nothing
+#
+# Fail-safe: every step traps its own failures, reports them, and the run
+# continues with the rest; the final summary lists what failed (exit 1).
+#
+# Platforms:
+#   Linux   apt/dnf/pacman/zypper, WSL
+#   macOS   Homebrew
+#   Termux  pkg
+#   Windows native shells: guidance only — run install/git.ps1 in PowerShell,
+#           run the rest inside WSL.
+
+set -euo pipefail
+
+APPLY=false
+[ "${1:-}" = "--apply" ] && APPLY=true
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+info() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
+warn() { printf '\033[1;33m==>\033[0m %s\n' "$*" >&2; }
+ok()   { printf '\033[32m  + \033[0m%s\n' "$*"; }
+note() { printf '    %s\n' "$*"; }
+
+# --- interaction helpers -----------------------------------------------------
+
+HAS_GUM=false
+command -v gum >/dev/null 2>&1 && HAS_GUM=true
+
+# Root-only package managers (pacman/apt/dnf/zypper/brew) get sudo when we are
+# not root. AUR helpers (paru/yay) handle sudo themselves — never prefix.
+SUDO=""
+if [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null 2>&1; then
+  SUDO="sudo"
+fi
+
+have_all() { # every command in "$@" must be on PATH
+  local c
+  for c in "$@"; do command -v "$c" >/dev/null 2>&1 || return 1; done
+}
+
+confirm() { # $1 prompt -> true on yes (enter = NO: fail-safe default)
+  if $HAS_GUM && [ -t 1 ]; then
+    gum confirm --default=false "$1"
+  else
+    local a=""
+    read -r -p "$1 [y/N] " a
+    [ "$a" = "y" ] || [ "$a" = "Y" ]
+  fi
+}
+
+pick_steps() { # fills CHOSEN with indices into STEP_LABELS (canonical order)
+  CHOSEN=()
+  local i=0 a=""
+  if $HAS_GUM && [ -t 1 ]; then
+    local sel=()
+    local s=""
+    mapfile -t sel < <(
+      gum choose --no-limit \
+        --header 'Pick what to run — space toggles, enter confirms:' \
+        -- "${STEP_LABELS[@]}"
+    )
+    for label in "${STEP_LABELS[@]}"; do
+      for s in "${sel[@]}"; do
+        [ "$s" = "$label" ] && CHOSEN+=("$i")
+      done
+      i=$((i + 1))
+    done
+  else
+    for label in "${STEP_LABELS[@]}"; do
+      read -r -p "Run ${label}? [Y/n] " a
+      case "$a" in n|N) ;; *) CHOSEN+=("$i") ;; esac
+      i=$((i + 1))
+    done
+  fi
+}
+
+run_step() { # $1 label, rest command... — never aborts the script
+  local label="$1"
+  shift
+  info "$label"
+  if "$@"; then
+    ok "${label}: done"
+  else
+    warn "${label}: FAILED — see the messages above; continuing with the rest"
+    FAILED+=("$label")
+  fi
+}
+
+# --- platform detection ------------------------------------------------------
+
+detect_os() {
+  if [ -n "${PREFIX:-}" ] && [[ "$PREFIX" == /data/data/com.termux* ]]; then
+    echo "termux"
+    return
+  fi
+  case "${OSTYPE:-}" in
+    msys*|mingw*|cygwin*) echo "windows"; return ;;
+  esac
+  case "$(uname -s)" in
+    Darwin) echo "macos" ;;
+    Linux)
+      if [ -n "${WSL_DISTRO_NAME:-}" ]; then echo "wsl"; else echo "linux"; fi
+      ;;
+    *) echo "unknown ($(uname -s))" ;;
+  esac
+}
+
+pkg_mgr() { # linux package manager, or nothing
+  local p
+  for p in apt-get dnf zypper pacman; do
+    if command -v "$p" >/dev/null 2>&1; then echo "$p"; return; fi
+  done
+}
+
+pkg_install() { # $1 pkg_mgr, rest package names -> install command string
+  case "$1" in
+    apt-get) shift; echo "apt-get update && apt-get install -y $*" ;;
+    dnf)     shift; echo "dnf install -y $*" ;;
+    zypper)  shift; echo "zypper --non-interactive install $*" ;;
+    pacman)  shift; echo "pacman -Sy --noconfirm $*" ;;
+  esac
+}
+
+# --- steps -------------------------------------------------------------------
+
+install_pkgs() { # $1 pkg_mgr, rest package names
+  local mgr="$1"; shift
+  local cmd
+  cmd="$(pkg_install "$mgr" "$@")"
+  if $APPLY; then
+    $SUDO bash -c "$cmd"
+  else
+    note "(dry run) would run: ${SUDO:+sudo }$cmd"
+  fi
+}
+
+step_essentials() { # git, zsh, curl
+  if have_all git zsh curl; then
+    note "git, zsh, curl already present — nothing to install"
+    return 0
+  fi
+  note "installing git, zsh, curl via $PKG"
+  install_pkgs "$PKG" git zsh curl
+  have_all git zsh curl # fail-safe: verify before declaring success
+}
+
+# fastfetch is in every distro repo; oh-my-posh is NOT in the official repos
+# of most distros (verified: not in pacman/extra; not in stock apt/dnf/zypper
+# either). On Arch derivatives it comes from the AUR (paru/yay); everywhere
+# else the official binary installer is the fallback.
+arch_like() { # Arch (and derivatives: CachyOS, Manjaro, EndeavourOS, ...)
+  local id=""
+  . /etc/os-release 2>/dev/null && id="${ID}${ID_LIKE}"
+  case "$id" in *arch*) return 0 ;; esac
+  return 1
+}
+
+install_oh_my_posh() {
+  if command -v oh-my-posh >/dev/null 2>&1; then
+    note "oh-my-posh present"
+    return
+  fi
+
+  if arch_like; then
+    # 1) official repos first — a few Arch derivatives ship oh-my-posh
+    if $APPLY && $SUDO pacman -S --noconfirm oh-my-posh >/dev/null 2>&1 &&
+       command -v oh-my-posh >/dev/null 2>&1; then
+      return
+    fi
+    if ! $APPLY; then
+      note "(dry run) would run: pacman -S --noconfirm oh-my-posh (no-op if not in repos)"
+    fi
+
+    # 2) not in official repos -> AUR helper; bootstrap paru via pacman if
+    #    neither paru nor yay is present (paru is in the extra repo)
+    local helper=""
+    if command -v paru >/dev/null 2>&1; then
+      helper=paru
+    elif command -v yay >/dev/null 2>&1; then
+      helper=yay
+    else
+      note "no AUR helper (paru/yay) — installing paru via pacman"
+      if $APPLY; then
+        $SUDO pacman -S --noconfirm paru >/dev/null 2>&1 ||
+          warn "could not install paru — install it manually, then re-run"
+      else
+        note "(dry run) would run: pacman -S --noconfirm paru"
+      fi
+      command -v paru >/dev/null 2>&1 && helper=paru
+    fi
+
+    if [ -n "$helper" ]; then
+      note "oh-my-posh missing — installing via $helper (AUR)"
+      if do_run "$helper" -S --noconfirm oh-my-posh && $APPLY &&
+         command -v oh-my-posh >/dev/null 2>&1; then
+        return
+      fi
+    fi
+  fi
+
+  # Portable fallback: the official installer, downloaded to a temp file so
+  # curl/network failures are visible instead of silently piping nothing to
+  # bash (the old `curl -s ... | bash -s` exited 0 and installed nothing).
+  note "oh-my-posh missing — installing via the official installer"
+  if $APPLY; then
+    tmp="$(mktemp)"
+    if curl -fsSL https://ohmyposh.dev/install.sh -o "$tmp" && bash "$tmp"; then
+      rm -f "$tmp"
+    else
+      rm -f "$tmp"
+      warn "oh-my-posh installation failed — install manually, e.g. 'paru -S oh-my-posh'"
+    fi
+  else
+    note "(dry run) would run: official oh-my-posh installer"
+  fi
+}
+
+step_tooling() { # fastfetch + oh-my-posh
+  if command -v fastfetch >/dev/null 2>&1; then
+    note "fastfetch present"
+  else
+    note "fastfetch missing — installing via $PKG"
+    install_pkgs "$PKG" fastfetch
+  fi
+  install_oh_my_posh
+  unless_macos_gh
+  have_all fastfetch oh-my-posh
+}
+
+# macOS: gh used to ride along in the brew install; keep that behavior
+unless_macos_gh() {
+  if [ "$PKG" = "brew" ] && ! command -v gh >/dev/null 2>&1; then
+    note "gh missing — installing via brew"
+    install_pkgs brew gh
+  fi
+}
+
+step_symlinks() {
+  if $APPLY; then
+    bash "$SCRIPT_DIR/bootstrap"
+  else
+    bash "$SCRIPT_DIR/bootstrap" --dry-run
+  fi
+}
+
+step_git() {
+  if $APPLY; then
+    bash "$SCRIPT_DIR/git.sh"
+  elif command -v gh >/dev/null 2>&1; then
+    note "(dry run) would run: install/git.sh"
+    note "  gh present -> gh auth login (browser), identity from GitHub account,"
+    note "                ensure ~/.ssh/id_ed25519, no token ever written"
+  else
+    note "(dry run) would run: install/git.sh"
+    note "  gh missing -> prompt for email, generate ed25519 key, print public key"
+  fi
+}
+
+# run a command in --apply mode, else print what would run
+do_run() {
+  if $APPLY; then
+    "$@"
+  else
+    note "(dry run) would run: $*"
+  fi
+}
+
+# --- main --------------------------------------------------------------------
+
+OS="$(detect_os)"
+info "platform: $OS"
+
+case "$OS" in
+  linux|wsl)
+    PKG="$(pkg_mgr)"
+    if [ -z "$PKG" ]; then
+      warn "no known package manager found (looked for apt-get/dnf/zypper/pacman)"
+      exit 1
+    fi
+    info "package manager: $PKG"
+    STEP_LABELS=(
+      "shell essentials (git, zsh, curl)"
+      "prompt tooling (fastfetch, oh-my-posh)"
+      "link dotfiles into \$HOME"
+      "git identity via gh"
+    )
+    STEP_FNS=(step_essentials step_tooling step_symlinks step_git)
+    ;;
+  macos)
+    if ! command -v brew >/dev/null 2>&1; then
+      warn "Homebrew not found. Install it first:"
+      note '  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+      exit 1
+    fi
+    info "package manager: brew"
+    STEP_LABELS=(
+      "install git, gh, oh-my-posh, fastfetch (brew)"
+      "link dotfiles into \$HOME"
+      "git identity via gh"
+    )
+    STEP_FNS=(step_essentials step_tooling step_symlinks step_git)
+    ;;
+  termux)
+    PKG="pkg"
+    info "package manager: pkg (Termux)"
+    STEP_LABELS=(
+      "install git, zsh, curl (pkg)"
+      "prompt tooling (fastfetch, oh-my-posh)"
+      "link dotfiles into \$HOME"
+    )
+    STEP_FNS=(step_essentials step_tooling step_symlinks)
+    ;;
+  windows)
+    warn "native Windows detected — shell config symlinks need WSL; git identity works natively:"
+    note "  1. install gh:           winget install --id GitHub.cli"
+    note "  2. install oh-my-posh:   winget install JanDeDobbeleer.OhMyPosh"
+    note "  3. git identity:         powershell -ExecutionPolicy Bypass -File install/git.ps1"
+    note "  4. dotfiles + shell:     install WSL, clone this repo inside it, then run"
+    note "                           ./install/setup --apply there"
+    if $APPLY; then
+      warn "--apply is not supported on a native Windows shell"
+      exit 1
+    fi
+    exit 0
+    ;;
+  *)
+    warn "unsupported platform: $OS"
+    exit 1
+    ;;
+esac
+
+# Decide how to run: --apply (everything), interactive pick (tty), dry plan.
+if ! $APPLY && [ -t 0 ] && [ -t 1 ]; then
+  if ! $HAS_GUM; then
+    info "interactive mode — install gum (paru -S gum) for the fancier picker;"
+    note "falling back to plain y/n prompts"
+  fi
+  pick_steps
+  if [ ${#CHOSEN[@]} -eq 0 ]; then
+    note "nothing selected — aborting"
+    exit 0
+  fi
+  if confirm "Run ${#CHOSEN[@]} selected step(s) now?"; then
+    APPLY=true
+  else
+    note "aborted — nothing was changed"
+    exit 0
+  fi
+elif $APPLY; then
+  CHOSEN=()
+  i=0
+  for _ in "${STEP_LABELS[@]}"; do CHOSEN+=("$i"); i=$((i + 1)); done
+  info "--apply mode: running every step (non-interactive)"
+else
+  info "non-interactive (piped) — dry run, nothing will be changed"
+  CHOSEN=()
+  i=0
+  for _ in "${STEP_LABELS[@]}"; do CHOSEN+=("$i"); i=$((i + 1)); done
+fi
+
+FAILED=()
+for i in "${CHOSEN[@]}"; do
+  run_step "${STEP_LABELS[$i]}" "${STEP_FNS[$i]}"
+done
+
+if [ "$OS" = "termux" ]; then
+  note "kitty/ link is inert under Termux — delete ~/.config/kitty if unwanted"
+  note "optional proot Ubuntu server: bash install/termux/setup-ubuntu.sh"
+  if $APPLY; then
+    warn "Termux: reopen the session so shell changes take effect"
+  fi
+fi
+
+if [ ${#FAILED[@]} -gt 0 ]; then
+  warn "finished with ${#FAILED[@]} failed step(s): ${FAILED[*]}"
+  exit 1
+elif $APPLY; then
+  info "all steps done. Restart your shell (or source ~/.zshrc / ~/.bashrc) to pick up aliases."
+else
+  info "dry run complete — nothing was changed."
+fi

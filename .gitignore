@@ -1,6 +1,15 @@
+# Secrets & local-only files — secrets never belong in this repo
 .env/
-termux/start-ubuntu.sh
-termux/ubuntu-fs/
-termux/ubuntu.sh
-code-server-4.93.1-linux-arm64.tar.gz
-code-server-4.93.1-linux-arm64/
+.env.*
+*.local
+*.bak
+credentials
+credentials.*
+*credentials*
+secrets
+*.key
+*.pem
+id_ed25519*
+# install/code-server.sh downloads into ~/.local, never into the repo
+# (historic exclusions for term-profile/ and termux/ artifacts removed with
+# those directories)

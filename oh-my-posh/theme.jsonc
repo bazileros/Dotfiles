@@ -1,0 +1,56 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "version": 4,
+  "final_space": true,
+  "console_title_template": "{{ .Folder }}",
+  "blocks": [
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "segments": [
+        {
+          "type": "path",
+          "style": "plain",
+          "foreground": "#abb2bf",
+          "properties": {
+            "style": "agnoster_full"
+          },
+          "template": " [{{ if eq .Path \"/\" }}/{{ else if or (eq .Path \"~\") (hasPrefix \"~/\" .Path) }}{{ .Path }}{{ else }}/{{ .Path }}{{ end }}]"
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "type": "text",
+          "style": "plain",
+          "foreground": "#e06c75",
+          "template": "{{ if gt .Code 0 }}\u2718{{ end }}"
+        },
+        {
+          "type": "session",
+          "style": "powerline",
+          "powerline_symbol": "\uE0B0",
+          "foreground": "#282c34",
+          "background": "#c678dd",
+          "template": " \uF303 {{ .UserName }} "
+        },
+        {
+          "type": "git",
+          "style": "powerline",
+          "powerline_symbol": "\uE0B0",
+          "foreground": "#282c34",
+          "background": "#98c379",
+          "background_templates": ["{{ if or .Working.Changed .Staging.Changed }}#e5c07b{{ end }}"],
+          "properties": {
+            "branch_icon": " \uF408 "
+          },
+          "template": "{{ .HEAD }}{{ if or .Working.Changed .Staging.Changed }} \uF044{{ end }} "
+        }
+      ]
+    }
+  ]
+}
