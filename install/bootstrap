@@ -33,7 +33,7 @@ case "${OSTYPE:-}" in
     echo "bootstrap: native Windows shell detected — Unix symlinks don't apply here."
     echo "Run inside WSL (clone the repo there, then ./install/bootstrap), or link"
     echo "manually from an admin prompt, e.g.:"
-    echo '  mklink /D "%USERPROFILE%\.config\nvim"   "C:\path\to\Dotfiles\nvim"'
+    echo '  mklink /D "%USERPROFILE%\.config\nvim"   "C:\path\to\Dotfiles\coding-tools\nvim"'
     exit 1
     ;;
 esac
@@ -133,22 +133,18 @@ if [ -n "${PREFIX:-}" ] && [[ "$PREFIX" == /data/data/com.termux* ]]; then
 fi
 
 # --- config dirs -----------------------------------------------------------
-link "nvim"          "$HOME/.config/nvim"
-link "kitty"         "$HOME/.config/kitty"
+link "coding-tools/nvim" "$HOME/.config/nvim"
+link "shell/kitty"       "$HOME/.config/kitty"
 # opencode: link ONLY opencode.json, not the whole dir — ~/.config/opencode
 # holds runtime state (skills/, .oh-my-opencode-slim manifest, node_modules,
 # ponytail's .ponytail-active) that must NOT be written into the git repo.
-link "opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
-link "oh-my-posh"    "$HOME/.config/oh-my-posh"
-link "fastfetch"     "$HOME/.config/fastfetch"
-
-# --- agent skill dirs ------------------------------------------------------
-link "agents-skills" "$HOME/.agents/skills"
-link "claude-skills" "$HOME/.claude/skills"
+link "coding-tools/opencode/opencode.json" "$HOME/.config/opencode/opencode.json"
+link "shell/oh-my-posh"  "$HOME/.config/oh-my-posh"
+link "shell/fastfetch"   "$HOME/.config/fastfetch"
 
 # --- shell files ------------------------------------------------------------
-link "aliases/aliases.sh" "$HOME/.aliases"
-link "zshrc"              "$HOME/.zshrc"
-link "bashrc"             "$HOME/.bashrc"
+link "shell/aliases/aliases.sh" "$HOME/.aliases"
+link "shell/zsh/zshrc"          "$HOME/.zshrc"
+link "shell/bashrc"             "$HOME/.bashrc"
 
 info "summary: $created would be/created, $skipped already correct, $backed_up backed up"

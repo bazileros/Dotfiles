@@ -250,6 +250,18 @@ step_symlinks() {
   fi
 }
 
+step_fetch() { # third-party content: zsh plugins + agent skills via fetch.sh
+  if ! have_all git npx; then
+    warn "git/npx missing — skipping fetch step"
+    return 0
+  fi
+  if $APPLY; then
+    do_run bash "$SCRIPT_DIR/fetch.sh"
+  else
+    do_run bash "$SCRIPT_DIR/fetch.sh" --dry-run
+  fi
+}
+
 step_git() {
   if $APPLY; then
     bash "$SCRIPT_DIR/git.sh"
@@ -287,11 +299,12 @@ case "$OS" in
     info "package manager: $PKG"
     STEP_LABELS=(
       "shell essentials (git, zsh, curl)"
+      "fetch third-party content (zsh plugins, agent skills)"
       "prompt tooling (fastfetch, oh-my-posh)"
       "link dotfiles into \$HOME"
       "git identity via gh"
     )
-    STEP_FNS=(step_essentials step_tooling step_symlinks step_git)
+    STEP_FNS=(step_essentials step_fetch step_tooling step_symlinks step_git)
     ;;
   macos)
     if ! command -v brew >/dev/null 2>&1; then
@@ -302,10 +315,11 @@ case "$OS" in
     info "package manager: brew"
     STEP_LABELS=(
       "install git, gh, oh-my-posh, fastfetch (brew)"
+      "fetch third-party content (zsh plugins, agent skills)"
       "link dotfiles into \$HOME"
       "git identity via gh"
     )
-    STEP_FNS=(step_essentials step_tooling step_symlinks step_git)
+    STEP_FNS=(step_essentials step_fetch step_tooling step_symlinks step_git)
     ;;
   termux)
     PKG="pkg"

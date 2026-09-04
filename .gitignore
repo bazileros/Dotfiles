@@ -13,3 +13,8 @@ id_ed25519*
 # install/code-server.sh downloads into ~/.local, never into the repo
 # (historic exclusions for term-profile/ and termux/ artifacts removed with
 # those directories)
+
+# Fetched content — install/fetch.sh downloads these; never committed
+.agents/
+.claude/
+shell/zsh/plugins/

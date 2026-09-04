@@ -3,7 +3,7 @@
 #
 # Migrated from termux/4-setup_ubuntu_server.sh. Dropped vs the original:
 # interactive "which shell?" alias appending and rc sourcing (aliases belong in
-# Dotfiles/aliases/aliases.sh now), and the step-3 pointer to the deleted
+# Dotfiles/shell/aliases/aliases.sh now), and the step-3 pointer to the deleted
 # term-profile/ folder (points at install/code-server.sh instead).
 #
 # Run inside Termux. Uses the AnLinux Ubuntu installer (proot, no root).
@@ -44,5 +44,5 @@ echo "  1. apt update && apt install -y curl git"
 echo "  2. clone this repo:   git clone https://github.com/<you>/Dotfiles.git"
 echo "  3. web IDE (optional): bash Dotfiles/install/code-server.sh"
 echo
-echo "Want a 'ubuntu' shortcut? Add it to Dotfiles/aliases/aliases.sh, e.g.:"
+echo "Want a 'ubuntu' shortcut? Add it to Dotfiles/shell/aliases/aliases.sh, e.g.:"
 echo "  alias ubuntu='bash $CONFIG_DIR/start-ubuntu.sh'"

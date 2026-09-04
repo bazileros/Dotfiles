@@ -11,17 +11,15 @@ Config lives in the repo and is symlinked into place by `install/bootstrap`:
 
 | Path                    | Symlinked to              | What it is                                        |
 |-------------------------|---------------------------|---------------------------------------------------|
-| `nvim/`                 | `~/.config/nvim`          | Neovim (LazyVim-based) configuration              |
-| `kitty/`                | `~/.config/kitty`         | Kitty terminal emulator configuration             |
-| `opencode/opencode.json` | `~/.config/opencode/opencode.json` | opencode global config (file link only; runtime state stays machine-local) |
-| `oh-my-posh/`           | `~/.config/oh-my-posh`    | Prompt theme — same on zsh/bash/PowerShell        |
-| `fastfetch/`            | `~/.config/fastfetch`     | Startup system info (One Dark palette)            |
-| `agents-skills/`        | `~/.agents/skills`        | Agent skills (convex, effect-ts, ...)             |
-| `claude-skills/`        | `~/.claude/skills`        | Claude Code skills (graphify)                     |
-| `aliases/aliases.sh`    | `~/.aliases`              | Shared shell aliases — single source for zsh+bash |
-| `zshrc`                 | `~/.zshrc`                | Lean zsh config (no oh-my-zsh), sources aliases   |
-| `bashrc`                | `~/.bashrc`               | Bash config, sources the same aliases file        |
-| `zsh/`                  | — (sourced via `zshrc`)   | Vendored zsh plugins: autosuggestions, syntax-highlighting |
+| `coding-tools/nvim/`    | `~/.config/nvim`          | Neovim (LazyVim-based) configuration              |
+| `shell/kitty/`          | `~/.config/kitty`         | Kitty terminal emulator configuration             |
+| `coding-tools/opencode/opencode.json` | `~/.config/opencode/opencode.json` | opencode global config (file link only; runtime state stays machine-local) |
+| `shell/oh-my-posh/`     | `~/.config/oh-my-posh`    | Prompt theme — same on zsh/bash/PowerShell        |
+| `shell/fastfetch/`      | `~/.config/fastfetch`     | Startup system info (One Dark palette)            |
+| `shell/aliases/aliases.sh` | `~/.aliases`           | Shared shell aliases — single source for zsh+bash |
+| `shell/zsh/zshrc`       | `~/.zshrc`                | Lean zsh config (no oh-my-zsh), sources aliases + fetched plugins |
+| `shell/bashrc`          | `~/.bashrc`               | Bash config, sources the same aliases file        |
+| `install/fetch.sh`      | — (not symlinked)         | Fetches third-party content (zsh plugins, agent skills) — see below |
 
 `install/` — the setup layer (not symlinked):
 
@@ -34,6 +32,21 @@ Config lives in the repo and is symlinked into place by `install/bootstrap`:
 | `install/ssh_hardening.sh`  | Debian/Ubuntu SSH server hardening (key-only auth, ufw)      |
 | `install/code-server.sh`    | Optional: latest code-server into `~/.local` (rootless)      |
 | `install/termux/setup-ubuntu.sh` | Optional: proot Ubuntu server inside Termux            |
+
+## Third-party content (fetched, not hosted)
+
+Everything below is downloaded by `install/fetch.sh`, never committed to this
+repo (see `.gitignore`):
+
+- **Zsh plugins** — cloned at pinned release tags into `shell/zsh/plugins/`
+  by `install/fetch.sh`: `zsh-autosuggestions` (v0.7.1) and
+  `zsh-syntax-highlighting` (0.8.0). `shell/zsh/zshrc` sources them if present.
+- **Agent skills** — installed into repo-local `.agents/` and `.claude/`
+  (git-ignored) from the skills.sh registry via `npx skills add`; existing
+  installs are restored from the committed `skills-lock.json` via
+  `npx skills experimental_install`.
+- **Vendored exception** — `ai-tools/skills/alchemy-cloudflare` is checked in
+  because it is not on the registry.
 
 ## Bootstrap (one command)
 
@@ -54,7 +67,7 @@ paru/yay — not in most distro repos), symlinks the configs via
 ## Prompt & startup info
 
 One oh-my-posh theme for every shell — zsh, bash, PowerShell (and macOS/Termux):
-`oh-my-posh/theme.jsonc`, an agnoster-style prompt colored to match the kitty
+`shell/oh-my-posh/theme.jsonc`, an agnoster-style prompt colored to match the kitty
 One Dark palette (user@host, cwd, git status, exit code, prompt on a new line).
 `zshrc`/`bashrc` init it when the binary is present, so shells without it still
 work. Same for `fastfetch`, which prints a one-shot system summary (OS, kernel,
