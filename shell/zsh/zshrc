@@ -21,10 +21,16 @@ SAVEHIST=10000
 setopt extended_history     # timestamps in history
 setopt hist_ignore_all_dups # drop older duplicates when a command is re-entered
 setopt share_history        # share history across sessions
+setopt hist_ignore_space    # lines starting with a space aren't recorded (e.g. secrets)
+setopt hist_verify          # !history expansions shown for review, not run blind
 
 # --- Shell behaviour ----------------------------------------------------------
 setopt autocd               # type a directory name to cd into it
+setopt auto_pushd pushd_ignore_dups # cd pushes a dir stack; use cd -1 / -2 / popd
 bindkey -e                  # emacs keybindings (default, explicit)
+bindkey '^[[A' up-line-or-search    # up/down arrows search history by prefix
+bindkey '^[[B' down-line-or-search
+unsetopt flowcontrol        # Ctrl-S/Ctrl-Q do forward search instead of freezing
 
 # --- Completion (zsh native, no framework) -------------------------------------
 autoload -Uz compinit && compinit
@@ -35,6 +41,8 @@ setopt complete_in_word
 setopt always_to_end
 setopt auto_menu
 zstyle ':completion:*' menu select
+# Case-insensitive + separator/fuzzy matching (oh-my-zsh default matcher list).
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 
 # --- Zsh plugins (fetched by install/fetch.sh into shell/zsh/plugins/, no oh-my-zsh) ---------
 # Syntax highlighting must load last (before the prompt is fine; it rebinds ZLE).
@@ -58,7 +66,7 @@ fi
 
 # --- Blank line between command output and the prompt (visual separation) ------------------
 autoload -Uz add-zsh-hook
-_zsh_blank_line() { print "" }
+_zsh_blank_line() { print ""; }
 add-zsh-hook precmd _zsh_blank_line
 
 # --- Startup info (fastfetch) -------------------------------------------------------------
