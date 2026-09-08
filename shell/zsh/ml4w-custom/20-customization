@@ -1,0 +1,59 @@
+# Dotfiles override of ml4w's ~/.config/zshrc/20-customization (zsh module)
+#
+# ml4w's shipped module lists the plugin 'fast-syntax-highlighting', but it is
+# not installed (omz custom/plugins only has zsh-autosuggestions +
+# zsh-syntax-highlighting), so oh-my-zsh warns on every shell start. It also
+# conflicts with zsh-syntax-highlighting (both own ZLE highlighting hooks).
+# Drop just that plugin; keep the shipped module identical.
+#
+# NOTE: loading as ~/.config/zshrc/custom/20-customization SHADOWS ml4w's
+# shipped 20-customization until ml4w changes this file (then re-sync here).
+# Also redundant: our shell/zsh/zshrc re-inits the prompt with our theme anyway.
+
+# -----------------------------------------------------
+# CUSTOMIZATION
+# -----------------------------------------------------
+POSH=agnoster
+
+# -----------------------------------------------------
+# oh-myzsh themes: https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
+# -----------------------------------------------------
+# ZSH_THEME=robbyrussell
+
+# -----------------------------------------------------
+# oh-my-zsh plugins
+# -----------------------------------------------------
+plugins=(
+    git
+    sudo
+    web-search
+    archlinux
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+    copyfile
+    copybuffer
+    dirhistory
+)
+
+# Set-up oh-my-zsh
+source $ZSH/oh-my-zsh.sh
+
+# -----------------------------------------------------
+# Set-up FZF key bindings (CTRL R for fuzzy history finder)
+# -----------------------------------------------------
+source <(fzf --zsh)
+
+# zsh history
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
+setopt appendhistory
+
+# -----------------------------------------------------
+# Prompt
+# -----------------------------------------------------
+eval "$(oh-my-posh init zsh --config $HOME/.config/ohmyposh/zen.toml)"
+# eval "$(oh-my-posh init zsh --config $HOME/.config/ohmyposh/EDM115-newline.omp.json)"
+
+# Shipped Theme
+# eval "$(oh-my-posh init zsh --config /usr/share/oh-my-posh/themes/agnoster.omp.json)"

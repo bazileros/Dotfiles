@@ -164,7 +164,29 @@ done
 
 # --- shell files ------------------------------------------------------------
 link "shell/aliases/aliases.sh" "$HOME/.aliases"
-link "shell/zsh/zshrc"          "$HOME/.zshrc"
-link "shell/bashrc"             "$HOME/.bashrc"
+
+# ml4w Hyprland dotfiles own ~/.zshrc / ~/.bashrc (symlinks into
+# ~/.mydotfiles/...) — never clobber their loaders. Each loader sources a user
+# file LAST (~/.zshrc_custom / ~/.bashrc_custom); link ours there instead so
+# the shell files' ml4w branch (aliases/theme/tooling, no double plugin load)
+# runs after ml4w's modules. Detect by loader content, not symlink path.
+ml4w_zsh=0; ml4w_bash=0
+grep -qs '^# ML4W zshrc loader'  "$HOME/.zshrc"  2>/dev/null && ml4w_zsh=1
+grep -qs '^# ML4W bashrc loader' "$HOME/.bashrc" 2>/dev/null && ml4w_bash=1
+zsh_dest="$HOME/.zshrc"
+bash_dest="$HOME/.bashrc"
+if [ "$ml4w_zsh" -eq 1 ]; then
+  zsh_dest="$HOME/.zshrc_custom"
+  warn "ml4w owns ~/.zshrc — linking zsh config to ~/.zshrc_custom"
+  # Override ml4w's 20-customization (removes the uninstalled
+  # fast-syntax-highlighting plugin that warns on every shell start).
+  link "shell/zsh/ml4w-custom/20-customization" "$HOME/.config/zshrc/custom/20-customization"
+fi
+if [ "$ml4w_bash" -eq 1 ]; then
+  bash_dest="$HOME/.bashrc_custom"
+  warn "ml4w owns ~/.bashrc — linking bash config to ~/.bashrc_custom"
+fi
+link "shell/zsh/zshrc" "$zsh_dest"
+link "shell/bashrc" "$bash_dest"
 
 info "summary: $created would be/created, $skipped already correct, $backed_up backed up"

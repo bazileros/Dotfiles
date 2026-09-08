@@ -1,5 +1,14 @@
-# Dotfiles/shell/bashrc — ~/.bashrc template
-#   ln -s ~/projects/Dotfiles/shell/bashrc ~/.bashrc
+# Dotfiles/shell/bashrc — interactive bash config
+#
+# Two roles, picked at source time:
+#   standalone             -> linked to ~/.bashrc        full config below
+#   ml4w Hyprland machine  -> linked to ~/.bashrc_custom  ml4w's loader owns
+#     ~/.bashrc and sources this file LAST; aliases + prompt theme below
+#     override ml4w's shipped modules. fastfetch is skipped — ml4w's
+#     30-autostart module already runs it on tty login.
+#
+#   ln -s ~/projects/Dotfiles/shell/bashrc ~/.bashrc          (standalone)
+#   ln -s ~/projects/Dotfiles/shell/bashrc ~/.bashrc_custom   (ml4w; install/bootstrap picks)
 
 # Interactive shells only (bash sources this for non-interactive shells too).
 case $- in
@@ -9,6 +18,12 @@ esac
 
 # Where this repo lives
 : "${DOTFILES:=$HOME/projects/Dotfiles}"
+
+# --- ml4w loader? ------------------------------------------------------------
+# 1 when ~/.bashrc is the ML4W bashrc loader (ml4w dotfiles own the shell startup).
+# Anchored to the loader's banner line so this file never matches itself.
+_ml4w_loader=0
+grep -qs '^# ML4W bashrc loader' "$HOME/.bashrc" 2>/dev/null && _ml4w_loader=1
 
 # Shared aliases (same file as zsh)
 [ -f "$DOTFILES/shell/aliases/aliases.sh" ] && source "$DOTFILES/shell/aliases/aliases.sh"
@@ -23,4 +38,7 @@ command -v oh-my-posh >/dev/null 2>&1 && eval "$(oh-my-posh init bash --config "
 PROMPT_COMMAND+=('printf "\n"')
 
 # --- Startup info (fastfetch) ---------------------------------------------------------
-command -v fastfetch >/dev/null 2>&1 && fastfetch
+# Skipped under ml4w: its 30-autostart module already runs fastfetch on tty login.
+if [ "$_ml4w_loader" -eq 0 ] && command -v fastfetch >/dev/null 2>&1; then
+  fastfetch
+fi

@@ -18,8 +18,8 @@ Config lives in the repo and is symlinked into place by `install/bootstrap`:
 | `shell/oh-my-posh/`     | `~/.config/oh-my-posh`    | Prompt theme — same on zsh/bash/PowerShell        |
 | `shell/fastfetch/`      | `~/.config/fastfetch`     | Startup system info (One Dark palette)            |
 | `shell/aliases/aliases.sh` | `~/.aliases`           | Shared shell aliases — single source for zsh+bash |
-| `shell/zsh/zshrc`       | `~/.zshrc`                | Lean zsh config (no oh-my-zsh), sources aliases + fetched plugins |
-| `shell/bashrc`          | `~/.bashrc`               | Bash config, sources the same aliases file        |
+| `shell/zsh/zshrc`       | `~/.zshrc` (ml4w machine: `~/.zshrc_custom`) | Lean zsh config (no oh-my-zsh), sources aliases + fetched plugins |
+| `shell/bashrc`          | `~/.bashrc` (ml4w machine: `~/.bashrc_custom`) | Bash config, sources the same aliases file        |
 | `install/fetch.sh`      | — (not symlinked)         | Fetches third-party content (zsh plugins, agent skills) — see below |
 
 `install/` — the setup layer (not symlinked):
@@ -67,6 +67,29 @@ and `pi-bin` from the AUR on Arch; `neovim`, `kitty`, `nodejs`/`npm`, `ripgrep`,
 `fd`, `gh` and `gum` from your package manager), symlinks the configs via
 `install/bootstrap`, installs the pi extensions' npm dependency, and sets up git
 identity.
+
+## On ML4W Hyprland machines
+
+If [ml4w](https://ml4w.com) dotfiles manage the shell here (its installer
+symlinks `~/.zshrc` / `~/.bashrc` to its own loaders), this repo defers to
+them — same install flow, no extra steps:
+
+- `install/bootstrap` detects ml4w's rc loaders by their banner and symlinks
+  `shell/zsh/zshrc` → `~/.zshrc_custom`, `shell/bashrc` → `~/.bashrc_custom`,
+  and `shell/zsh/ml4w-custom/20-customization` →
+  `~/.config/zshrc/custom/20-customization` (ml4w's loader sources these last —
+  update-safe). It never clobbers ml4w's loaders.
+- The shell files are dual-mode and detect ml4w at source time: under ml4w only
+  the layer ml4w lacks runs (shared aliases, bun/nvm/flutter/opencode paths,
+  history, prompt theme); elsewhere they are the full lean config. `compinit`,
+  vendored plugins and `fastfetch` are skipped under ml4w — its oh-my-zsh /
+  fzf / autostart already provide them, and re-loading would break highlighting.
+- Order is irrelevant: ml4w first or repo first. Whenever ml4w is (or was)
+  installed, just re-run `./install/bootstrap` (or `./install/setup --apply`)
+  and idempotence sorts the rest.
+- `bootstrap` also swaps ml4w's `~/.config/fastfetch` and `~/.config/kitty`
+  symlinks for this repo's (ml4w's are backed up to `*.bak`), so this repo's
+  prompt-adjacent config wins by default on those machines too.
 
 ## Prompt & startup info
 
