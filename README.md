@@ -62,7 +62,9 @@ cd Dotfiles
 Termux, and native Windows, then: installs missing shell essentials (git, zsh,
 curl), prompt tooling (`fastfetch` from your package manager; `oh-my-posh` from
 pacman when available, otherwise its official installer, otherwise the AUR via
-paru/yay — not in most distro repos), symlinks the configs via
+paru/yay — not in most distro repos), installs the coding stack (`ghostex-bin`
+and `pi-bin` from the AUR on Arch; `neovim`, `kitty`, `nodejs`/`npm`, `ripgrep`,
+`fd`, `gh` and `gum` from your package manager), symlinks the configs via
 `install/bootstrap`, installs the pi extensions' npm dependency, and sets up git
 identity.
 

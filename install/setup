@@ -162,6 +162,26 @@ arch_like() { # Arch (and derivatives: CachyOS, Manjaro, EndeavourOS, ...)
   return 1
 }
 
+# Sets AUR_HELPER to paru/yay, bootstrapping paru via pacman when neither is
+# present (paru is in the extra repo). Stays empty when unavailable.
+ensure_aur_helper() {
+  AUR_HELPER=""
+  if command -v paru >/dev/null 2>&1; then
+    AUR_HELPER=paru
+  elif command -v yay >/dev/null 2>&1; then
+    AUR_HELPER=yay
+  else
+    note "no AUR helper (paru/yay) — installing paru via pacman"
+    if $APPLY; then
+      $SUDO pacman -S --noconfirm paru >/dev/null 2>&1 ||
+        warn "could not install paru — install it manually, then re-run"
+    else
+      note "(dry run) would run: pacman -S --noconfirm paru"
+    fi
+    command -v paru >/dev/null 2>&1 && AUR_HELPER=paru
+  fi
+}
+
 install_oh_my_posh() {
   if command -v oh-my-posh >/dev/null 2>&1; then
     note "oh-my-posh present"
@@ -178,27 +198,11 @@ install_oh_my_posh() {
       note "(dry run) would run: pacman -S --noconfirm oh-my-posh (no-op if not in repos)"
     fi
 
-    # 2) not in official repos -> AUR helper; bootstrap paru via pacman if
-    #    neither paru nor yay is present (paru is in the extra repo)
-    local helper=""
-    if command -v paru >/dev/null 2>&1; then
-      helper=paru
-    elif command -v yay >/dev/null 2>&1; then
-      helper=yay
-    else
-      note "no AUR helper (paru/yay) — installing paru via pacman"
-      if $APPLY; then
-        $SUDO pacman -S --noconfirm paru >/dev/null 2>&1 ||
-          warn "could not install paru — install it manually, then re-run"
-      else
-        note "(dry run) would run: pacman -S --noconfirm paru"
-      fi
-      command -v paru >/dev/null 2>&1 && helper=paru
-    fi
-
-    if [ -n "$helper" ]; then
-      note "oh-my-posh missing — installing via $helper (AUR)"
-      if do_run "$helper" -S --noconfirm oh-my-posh && $APPLY &&
+    # 2) not in official repos -> AUR helper (bootstraps paru if needed)
+    ensure_aur_helper
+    if [ -n "$AUR_HELPER" ]; then
+      note "oh-my-posh missing — installing via $AUR_HELPER (AUR)"
+      if do_run "$AUR_HELPER" -S --noconfirm oh-my-posh && $APPLY &&
          command -v oh-my-posh >/dev/null 2>&1; then
         return
       fi
@@ -240,6 +244,69 @@ unless_macos_gh() {
     note "gh missing — installing via brew"
     install_pkgs brew gh
   fi
+}
+
+# Coding stack: ghostex + pi (AUR binary packages ghostex-bin/pi-bin on Arch),
+# neovim + kitty (their configs are symlinked by bootstrap), node/npm (pi
+# extensions, skills fetch, mason LSPs), and the cli tools the configs expect.
+# Packages install one by one so a single unavailable name never blocks the rest.
+step_coding() {
+  local fd_pkg=fd gh_pkg=gh
+  local -a node_pkgs=(nodejs npm)
+  case "$PKG" in
+    pacman) gh_pkg=github-cli ;;
+    apt-get|dnf) fd_pkg=fd-find ;;
+    brew) node_pkgs=(node) ;;
+  esac
+
+  local -a pkgs=()
+  command -v nvim >/dev/null 2>&1 || pkgs+=(neovim)
+  if [ "$PKG" != "brew" ]; then
+    command -v kitty >/dev/null 2>&1 || pkgs+=(kitty)
+  else
+    note "kitty: GUI app — install with 'brew install --cask kitty' if wanted"
+  fi
+  have_all node npm || pkgs+=("${node_pkgs[@]}")
+  command -v rg >/dev/null 2>&1 || pkgs+=(ripgrep)
+  { command -v fd >/dev/null 2>&1 || command -v fdfind >/dev/null 2>&1; } || pkgs+=("$fd_pkg")
+  command -v gh >/dev/null 2>&1 || pkgs+=("$gh_pkg")
+  # gum (interactive picker) is only in pacman/brew; skip elsewhere
+  case "$PKG" in
+    pacman|brew) command -v gum >/dev/null 2>&1 || pkgs+=(gum) ;;
+  esac
+
+  local p
+  if [ ${#pkgs[@]} -eq 0 ]; then
+    note "neovim, kitty, node/npm, ripgrep, fd, gh already present"
+  fi
+  for p in "${pkgs[@]}"; do
+    note "installing $p via $PKG"
+    install_pkgs "$PKG" "$p" || warn "$p failed to install — continuing with the rest"
+  done
+
+  if arch_like; then
+    local -a aur=()
+    command -v ghostex >/dev/null 2>&1 || aur+=(ghostex-bin)
+    command -v pi >/dev/null 2>&1 || aur+=(pi-bin)
+    if [ ${#aur[@]} -gt 0 ]; then
+      ensure_aur_helper
+      if [ -n "$AUR_HELPER" ]; then
+        for p in "${aur[@]}"; do
+          note "installing $p via $AUR_HELPER (AUR)"
+          do_run "$AUR_HELPER" -S --noconfirm "$p" ||
+            warn "$p failed — install manually: $AUR_HELPER -S $p"
+        done
+      else
+        warn "no AUR helper available — install manually: ${aur[*]}"
+      fi
+    else
+      note "ghostex, pi already present"
+    fi
+  else
+    note "ghostex/pi ship as AUR packages (ghostex-bin, pi-bin) — no $PKG package; install manually if needed"
+  fi
+
+  have_all nvim node npm rg # fail-safe: verify before declaring success
 }
 
 step_symlinks() {
@@ -320,13 +387,14 @@ case "$OS" in
     info "package manager: $PKG"
     STEP_LABELS=(
       "shell essentials (git, zsh, curl)"
+      "coding stack (ghostex, pi, neovim, kitty, node, cli tools)"
       "fetch third-party content (zsh plugins, agent skills)"
       "prompt tooling (fastfetch, oh-my-posh)"
       "link dotfiles into \$HOME"
       "pi extensions dependencies (npm ci)"
       "git identity via gh"
     )
-    STEP_FNS=(step_essentials step_fetch step_tooling step_symlinks step_pi step_git)
+    STEP_FNS=(step_essentials step_coding step_fetch step_tooling step_symlinks step_pi step_git)
     ;;
   macos)
     if ! command -v brew >/dev/null 2>&1; then
@@ -337,12 +405,13 @@ case "$OS" in
     info "package manager: brew"
     STEP_LABELS=(
       "install git, gh, oh-my-posh, fastfetch (brew)"
+      "coding stack (neovim, node, cli tools via brew)"
       "fetch third-party content (zsh plugins, agent skills)"
       "link dotfiles into \$HOME"
       "pi extensions dependencies (npm ci)"
       "git identity via gh"
     )
-    STEP_FNS=(step_essentials step_fetch step_tooling step_symlinks step_pi step_git)
+    STEP_FNS=(step_essentials step_coding step_fetch step_tooling step_symlinks step_pi step_git)
     ;;
   termux)
     PKG="pkg"
