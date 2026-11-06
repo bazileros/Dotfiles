@@ -10,6 +10,12 @@ secrets
 *.key
 *.pem
 id_ed25519*
+# pi agent credentials (auth.json holds provider API keys; lives in ~/.pi/agent)
+auth.json
+mcp-auth.json
+models-store.json
+sessions/
+trust.json
 # install/code-server.sh downloads into ~/.local, never into the repo
 # (historic exclusions for term-profile/ and termux/ artifacts removed with
 # those directories)
