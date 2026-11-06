@@ -1,0 +1,7 @@
+{
+	"$schema": "https://pi.dev/schemas/keybindings.schema.json",
+	"app.session.new": "alt+n",
+	"app.session.tree": "alt+t",
+	"app.session.resume": "alt+r",
+	"app.session.fork": "alt+shift+f"
+}

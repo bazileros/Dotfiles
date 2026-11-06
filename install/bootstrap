@@ -142,6 +142,26 @@ link "coding-tools/opencode/opencode.json" "$HOME/.config/opencode/opencode.json
 link "shell/oh-my-posh"  "$HOME/.config/oh-my-posh"
 link "shell/fastfetch"   "$HOME/.config/fastfetch"
 
+# --- pi (coding agent) ------------------------------------------------------
+# Link config entries one by one, never the whole ~/.pi/agent dir: auth.json,
+# mcp-auth.json, models-store.json, sessions/, trust.json, zar-rate.json and
+# npm/ are runtime state (credentials, caches, machine paths) that must stay
+# machine-local. Skills are linked per directory so fetched skills can still
+# land in ~/.pi/agent/skills without writing into the repo.
+link "coding-tools/pi/settings.json"    "$HOME/.pi/agent/settings.json"
+link "coding-tools/pi/AGENTS.md"        "$HOME/.pi/agent/AGENTS.md"
+link "coding-tools/pi/keybindings.json" "$HOME/.pi/agent/keybindings.json"
+link "coding-tools/pi/mcp.json"         "$HOME/.pi/agent/mcp.json"
+link "coding-tools/pi/agents"           "$HOME/.pi/agent/agents"
+link "coding-tools/pi/prompts"          "$HOME/.pi/agent/prompts"
+link "coding-tools/pi/themes/one-dark.json" "$HOME/.pi/agent/themes/one-dark.json"
+link "coding-tools/pi/vendor"           "$HOME/.pi/agent/vendor"
+link "coding-tools/pi/extensions"       "$HOME/.pi/agent/extensions"
+for skill in "$REPO"/coding-tools/pi/skills/*/; do
+  [ -d "$skill" ] || continue
+  link "coding-tools/pi/skills/$(basename "$skill")" "$HOME/.pi/agent/skills/$(basename "$skill")"
+done
+
 # --- shell files ------------------------------------------------------------
 link "shell/aliases/aliases.sh" "$HOME/.aliases"
 link "shell/zsh/zshrc"          "$HOME/.zshrc"

@@ -1,0 +1,17 @@
+{
+	"mcpServers": {
+		"ghostex-browser": {
+			"command": "ghostex",
+			"args": ["browser", "mcp"],
+			"exposure": "direct",
+			"description": "Ghostex embedded CEF browser: list and select pages, navigate, DOM snapshot, click, fill, press keys, read console logs, evaluate JS, and take screenshots.",
+			"timeout": 30
+		},
+		"exa": {
+			"url": "https://mcp.exa.ai/mcp",
+			"exposure": "direct",
+			"description": "Exa web search, page fetching and multi-step research agent. No API key required.",
+			"timeout": 60
+		}
+	}
+}

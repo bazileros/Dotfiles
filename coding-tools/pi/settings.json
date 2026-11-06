@@ -1,0 +1,30 @@
+{
+  "$schema": "https://pi.dev/schemas/settings.schema.json",
+  "defaultProvider": "opencode-go",
+  "defaultModel": "kimi-k3",
+  "defaultThinkingLevel": "high",
+  "theme": "one-dark",
+  "defaultTools": [
+    "+grep",
+    "+find",
+    "+ls"
+  ],
+  "quietStartup": "header",
+  "editorPaddingX": 1,
+  "autocompleteMaxVisible": 8,
+  "collapseChangelog": true,
+  "terminal": {
+    "showTerminalProgress": true,
+    "images": "kitty",
+    "showImages": true,
+    "imageWidthCells": 80
+  },
+  "markdown": {
+    "mermaid": "final"
+  },
+  "packages": [
+    "npm:pi-lens",
+    "npm:pi-questions",
+    "vendor/pi-todo"
+  ]
+}

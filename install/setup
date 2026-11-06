@@ -262,6 +262,27 @@ step_fetch() { # third-party content: zsh plugins + agent skills via fetch.sh
   fi
 }
 
+step_pi() { # npm deps for the pi extensions tree (playwright-core for webtest)
+  # pi installs its own packages (settings.json "packages": pi-lens,
+  # pi-questions, vendor/pi-todo) into ~/.pi/agent/npm at startup, so this only
+  # covers the extension tree's own dependency. node_modules is git-ignored and
+  # lives inside the symlinked repo dir, not in ~/.pi/agent.
+  local ext_dir="$SCRIPT_DIR/../coding-tools/pi/extensions"
+  if ! command -v npm >/dev/null 2>&1; then
+    warn "npm missing — skipping pi extensions dependencies (browser/web tests will not load)"
+    return 0
+  fi
+  if [ ! -f "$ext_dir/package-lock.json" ]; then
+    warn "$ext_dir/package-lock.json missing — skipping pi extensions dependencies"
+    return 0
+  fi
+  if $APPLY; then
+    do_run npm ci --prefix "$ext_dir" --no-audit --no-fund
+  else
+    note "(dry run) would run: npm ci --prefix $ext_dir"
+  fi
+}
+
 step_git() {
   if $APPLY; then
     bash "$SCRIPT_DIR/git.sh"
@@ -302,9 +323,10 @@ case "$OS" in
       "fetch third-party content (zsh plugins, agent skills)"
       "prompt tooling (fastfetch, oh-my-posh)"
       "link dotfiles into \$HOME"
+      "pi extensions dependencies (npm ci)"
       "git identity via gh"
     )
-    STEP_FNS=(step_essentials step_fetch step_tooling step_symlinks step_git)
+    STEP_FNS=(step_essentials step_fetch step_tooling step_symlinks step_pi step_git)
     ;;
   macos)
     if ! command -v brew >/dev/null 2>&1; then
@@ -317,9 +339,10 @@ case "$OS" in
       "install git, gh, oh-my-posh, fastfetch (brew)"
       "fetch third-party content (zsh plugins, agent skills)"
       "link dotfiles into \$HOME"
+      "pi extensions dependencies (npm ci)"
       "git identity via gh"
     )
-    STEP_FNS=(step_essentials step_fetch step_tooling step_symlinks step_git)
+    STEP_FNS=(step_essentials step_fetch step_tooling step_symlinks step_pi step_git)
     ;;
   termux)
     PKG="pkg"

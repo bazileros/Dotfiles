@@ -1,0 +1,37 @@
+{
+	"name": "pi-todo",
+	"version": "1.2.0",
+	"description": "Persistent per-project todo tracker with live TUI widget for Pi",
+	"author": "mrg2400xx",
+	"license": "MIT",
+	"type": "module",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mrg2400xx/pi-todo.git"
+	},
+	"homepage": "https://github.com/mrg2400xx/pi-todo#readme",
+	"bugs": {
+		"url": "https://github.com/mrg2400xx/pi-todo/issues"
+	},
+	"keywords": [
+		"pi-package",
+		"pi",
+		"pi-coding-agent",
+		"todo",
+		"task-tracker",
+		"productivity"
+	],
+	"files": [
+		"src/**/*.ts",
+		"README.md",
+		"LICENSE"
+	],
+	"pi": {
+		"extensions": [
+			"./src/index.ts"
+		]
+	},
+	"peerDependencies": {
+		"typebox": "*"
+	}
+}

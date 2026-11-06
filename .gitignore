@@ -18,3 +18,7 @@ id_ed25519*
 .agents/
 .claude/
 shell/zsh/plugins/
+
+# pi extensions dependencies — installed by install/setup (npm ci) into the
+# symlinked tree, like any other node_modules
+coding-tools/pi/extensions/node_modules/

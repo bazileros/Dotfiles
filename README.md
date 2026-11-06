@@ -14,6 +14,7 @@ Config lives in the repo and is symlinked into place by `install/bootstrap`:
 | `coding-tools/nvim/`    | `~/.config/nvim`          | Neovim (LazyVim-based) configuration              |
 | `shell/kitty/`          | `~/.config/kitty`         | Kitty terminal emulator configuration             |
 | `coding-tools/opencode/opencode.json` | `~/.config/opencode/opencode.json` | opencode global config (file link only; runtime state stays machine-local) |
+| `coding-tools/pi/` (per-entry) | `~/.pi/agent/` | pi coding agent config: settings, agents, prompts, skills, themes, extensions, vendored packages — never credentials, sessions or caches |
 | `shell/oh-my-posh/`     | `~/.config/oh-my-posh`    | Prompt theme — same on zsh/bash/PowerShell        |
 | `shell/fastfetch/`      | `~/.config/fastfetch`     | Startup system info (One Dark palette)            |
 | `shell/aliases/aliases.sh` | `~/.aliases`           | Shared shell aliases — single source for zsh+bash |
@@ -62,7 +63,8 @@ Termux, and native Windows, then: installs missing shell essentials (git, zsh,
 curl), prompt tooling (`fastfetch` from your package manager; `oh-my-posh` from
 pacman when available, otherwise its official installer, otherwise the AUR via
 paru/yay — not in most distro repos), symlinks the configs via
-`install/bootstrap`, and sets up git identity.
+`install/bootstrap`, installs the pi extensions' npm dependency, and sets up git
+identity.
 
 ## Prompt & startup info
 
