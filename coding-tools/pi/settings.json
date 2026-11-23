@@ -22,9 +22,21 @@
   "markdown": {
     "mermaid": "final"
   },
+  "defaultProjectTrust": "ask",
+  "doubleEscapeAction": "tree",
+  "treeFilterMode": "default",
+  "enableInstallTelemetry": false,
   "packages": [
     "npm:pi-lens",
     "npm:pi-questions",
-    "vendor/pi-todo"
+    "npm:@tintinweb/pi-subagents",
+    "npm:pi-grill",
+    "npm:@plannotator/pi-extension",
+    "npm:pi-markdown-preview",
+    "npm:pi-background-tasks",
+    "npm:cc-safety-net",
+    "npm:@juicesharp/rpiv-todo",
+    "npm:@gotgenes/pi-permission-system",
+    "git:github.com/ghoseb/pi-askuserquestion"
   ]
 }

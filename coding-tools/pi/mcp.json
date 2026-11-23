@@ -10,7 +10,7 @@
 		"exa": {
 			"url": "https://mcp.exa.ai/mcp",
 			"exposure": "direct",
-			"description": "Exa web search, page fetching and multi-step research agent. No API key required.",
+			"description": "Exa web search and page fetching: web_search_exa for current web results, web_fetch_exa to read a page as clean markdown.",
 			"timeout": 60
 		}
 	}

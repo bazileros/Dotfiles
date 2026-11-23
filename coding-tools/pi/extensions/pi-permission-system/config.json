@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/gotgenes/pi-packages/main/packages/pi-permission-system/schemas/permissions.schema.json",
+  "permissionReviewLog": true,
+  "permission": {
+    "*": "ask",
+    "read": "allow",
+    "path": {
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow",
+      "~/.ssh/*": "deny"
+    },
+    "external_directory": {
+      "*": "ask",
+      "~/projects/*": "allow",
+      "~/.pi/*": "allow"
+    },
+    "external_directory_read": {
+      "*": "ask",
+      "~/projects/*": "allow",
+      "~/.pi/*": "allow"
+    },
+    "external_directory_write": {
+      "*": "ask",
+      "~/projects/*": "allow"
+    },
+    "bead": "allow",
+    "bash": {
+      "*": "ask",
+      "bd *": "allow",
+      "gx board *": "allow",
+      "ghostex state": "allow",
+      "git status": "allow",
+      "git diff *": "allow"
+    }
+  },
+  "yoloMode": true
+}
