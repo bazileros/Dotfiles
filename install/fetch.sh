@@ -54,7 +54,11 @@ else
 fi
 if [ -f "$REPO/skills-lock.json" ]; then
   printf '  skills-lock.json present, restoring pinned set\n'
-  run $JS_RUN -y skills experimental_install -y
+  # -a pins the project-scope agent dirs the CLI links into. Without it the CLI
+  # links every agent it knows (~50 dirs, ~130K each) into the cwd, which is why
+  # only .claude/ and .agents/ are gitignored: everything else is machine config
+  # that belongs under $HOME, not in this repo.
+  run $JS_RUN -y skills experimental_install -a claude-code -y
 else
   printf '  no skills-lock.json, installing from upstream sources\n'
   run $JS_RUN -y skills add \
@@ -73,7 +77,7 @@ else
       alvinunreal/oh-my-opencode-slim haowjy/creative-writing-skills \
       ulpi-io/skills                ariadoss/superskills \
       juandelossantos/another-agent-skills alexasomba/paystack-node \
-      -y
+      -a claude-code -y
     printf '  done — commit skills-lock.json to pin this set\n'
   fi
 
