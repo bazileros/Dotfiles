@@ -46,7 +46,7 @@ function hasBd(): boolean {
 		.some((dir) => dir && (fs.existsSync(path.join(dir, "bd")) || fs.existsSync(path.join(dir, "bd.exe"))));
 }
 
-export default function beadsExtension(pi: ExtensionAPI) {
+export default function beadsAdminExtension(pi: ExtensionAPI) {
 	const run = async (args: string[]): Promise<string> => {
 		try {
 			const { stdout } = await exec("bd", args, {

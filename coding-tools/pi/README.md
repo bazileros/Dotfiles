@@ -15,8 +15,8 @@ land in this repo.
 | `prompts/`                  | `~/.pi/agent/prompts/`             | slash-command prompt templates          |
 | `skills/<name>/`            | `~/.pi/agent/skills/<name>/`       | locally authored skills (per dir, so fetched skills can coexist) |
 | `themes/one-dark.json`      | `~/.pi/agent/themes/one-dark.json` | colorscheme matching the kitty palette  |
-| `extensions/`               | `~/.pi/agent/extensions/`          | extensions + `lib/` + `subagent/`       |
-| `vendor/pi-todo/`           | `~/.pi/agent/vendor/pi-todo/`      | vendored todo package (no upstream sync) |
+| `extensions/`               | `~/.pi/agent/extensions/`          | extensions + `lib/` (delegation via npm `@tintinweb/pi-subagents`) |
+| `archive/`                  | not linked                         | preserved but unloaded: the old `subagent/` extension |
 
 ## What is never synced
 
@@ -33,8 +33,9 @@ npm ci --prefix coding-tools/pi/extensions   # playwright-core for webtest.ts
 
 `install/setup` runs this as the "pi extensions dependencies" step. The
 extensions in `settings.json`'s `packages` array (`npm:pi-lens`,
-`npm:pi-questions`, `vendor/pi-todo`) are installed by pi itself into
-`~/.pi/agent/npm` on first start — nothing to sync.
+`npm:pi-questions`, `npm:@tintinweb/pi-subagents`, `npm:@juicesharp/rpiv-todo`,
+…) are installed by pi itself into `~/.pi/agent/npm` on first start — nothing to
+sync.
 
 ## Notes
 

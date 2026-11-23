@@ -422,7 +422,7 @@ step_fetch() { # third-party content: zsh plugins + agent skills via fetch.sh
 
 step_pi() { # npm deps for the pi extensions tree (playwright-core for webtest)
   # pi installs its own packages (settings.json "packages": pi-lens,
-  # pi-questions, vendor/pi-todo) into ~/.pi/agent/npm at startup, so this only
+  # pi-questions) into ~/.pi/agent/npm at startup, so this only
   # covers the extension tree's own dependency. node_modules is git-ignored and
   # lives inside the symlinked repo dir, not in ~/.pi/agent.
   local ext_dir="$SCRIPT_DIR/../coding-tools/pi/extensions"
