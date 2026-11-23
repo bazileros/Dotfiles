@@ -97,4 +97,3 @@ else
       run ln -sfn "$REPO/.claude/skills" "$HOME/.claude/skills"
     fi
   fi
-fi
