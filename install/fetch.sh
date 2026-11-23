@@ -6,7 +6,7 @@
 #
 #   shell/zsh/plugins/*        zsh-users plugins, pinned to release tags
 #   .agents/skills + .claude   agent skills via the skills.sh CLI
-#                              (npx skills), restored from skills-lock.json
+#                              (bunx/npx skills), restored from skills-lock.json
 #                              which IS the committed manifest
 #   ai-tools/skills/alchemy-cloudflare  vendored exception: not on the
 #                              skills.sh registry, no official SKILL.md,
@@ -44,15 +44,20 @@ fetch_repo shell/zsh/plugins/zsh-syntax-highlighting \
   https://github.com/zsh-users/zsh-syntax-highlighting 0.8.0
 
 say "agent skills (skills.sh CLI)"
-if ! command -v npx >/dev/null 2>&1; then
-  printf '  npx not found, skipping agent skills (needs node)\n'
+if command -v bunx >/dev/null 2>&1; then
+  JS_RUN="bunx"
+elif command -v npx >/dev/null 2>&1; then
+  JS_RUN="npx"
 else
-  if [ -f "$REPO/skills-lock.json" ]; then
-    printf '  skills-lock.json present, restoring pinned set\n'
-    run npx -y skills experimental_install -y
-  else
-    printf '  no skills-lock.json, installing from upstream sources\n'
-    run npx -y skills add \
+  printf '  neither bunx nor npx found — skipping agent skills. Install bun (https://bun.sh) or Node.js (https://nodejs.org) and re-run fetch.sh.\n'
+  return
+fi
+if [ -f "$REPO/skills-lock.json" ]; then
+  printf '  skills-lock.json present, restoring pinned set\n'
+  run $JS_RUN -y skills experimental_install -y
+else
+  printf '  no skills-lock.json, installing from upstream sources\n'
+  run $JS_RUN -y skills add \
       get-convex/agent-skills       waynesutton/convexskills \
       vercel-labs/agent-skills      vercel-labs/skills \
       anthropics/skills             leonxlnx/taste-skill \

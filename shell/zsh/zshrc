@@ -93,10 +93,25 @@ autoload -Uz add-zsh-hook
 _zsh_blank_line() { print ""; }
 add-zsh-hook precmd _zsh_blank_line
 
-# --- Startup info (fastfetch) -------------------------------------------------------------
-# Interactive shells only; skipped when fastfetch isn't installed. Also skipped
-# under ml4w: its 30-autostart module already runs fastfetch on tty login.
-if [ "$_ml4w_loader" -eq 0 ] && [[ $- == *i* ]] && command -v fastfetch >/dev/null 2>&1; then
+# --- Responsive Fastfetch Definition & Execution ------------------------------------------
+# Intercepts fastfetch calls to drop text modules if the terminal window is too small.
+fastfetch() {
+  whence -p fastfetch >/dev/null 2>&1 || return 0
+
+  local term_width
+  term_width=$(tput cols 2>/dev/null || echo 100)
+
+  if [ "$term_width" -lt 90 ]; then
+    # Narrow window: suppress all modules using an empty structure string
+    command fastfetch -s ""
+  else
+    # Wide window: run full configured fetch layout
+    command fastfetch
+  fi
+}
+
+# Run it automatically on startup for standalone setups
+if [ "$_ml4w_loader" -eq 0 ] && [[ $- == *i* ]]; then
   fastfetch
 fi
 
@@ -111,3 +126,22 @@ export PATH="$PATH:$HOME/dart/flutter/bin"
 
 # opencode
 export PATH=$HOME/.opencode/bin:$PATH
+
+# --- wb: wrap a URL into a Tauri webview app via deskify ---------------------
+wb() {
+  if [[ -z "$1" || -z "$2" ]]; then
+    echo "Usage: wb <url> <name>"
+    echo "Example: wb discord.com Discord"
+    return 1
+  fi
+
+  local url="$1"
+  # Automatically prepend https:// if missing
+  if [[ ! "$url" =~ ^[Hh][Tt][Tt][Pp][Ss]?:// ]]; then
+    url="https://$url"
+  fi
+
+  deskify build --url "$url" --name "$2" --backend tauri
+}
+export WGPU_BACKEND="gl"
+

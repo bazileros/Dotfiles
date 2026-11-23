@@ -11,7 +11,7 @@
         {
           "type": "path",
           "style": "plain",
-          "foreground": "#abb2bf",
+          "foreground": "white",
           "properties": {
             "style": "agnoster_full"
           },
@@ -27,24 +27,24 @@
         {
           "type": "text",
           "style": "plain",
-          "foreground": "#e06c75",
+          "foreground": "red",
           "template": "{{ if gt .Code 0 }}\u2718{{ end }}"
         },
         {
           "type": "session",
           "style": "powerline",
           "powerline_symbol": "\uE0B0",
-          "foreground": "#282c34",
-          "background": "#c678dd",
+          "foreground": "black",
+          "background": "magenta",
           "template": " \uF303 {{ .UserName }} "
         },
         {
           "type": "git",
           "style": "powerline",
           "powerline_symbol": "\uE0B0",
-          "foreground": "#282c34",
-          "background": "#98c379",
-          "background_templates": ["{{ if or .Working.Changed .Staging.Changed }}#e5c07b{{ end }}"],
+          "foreground": "black",
+          "background": "green",
+          "background_templates": ["{{ if or .Working.Changed .Staging.Changed }}yellow{{ end }}"],
           "properties": {
             "branch_icon": " \uF408 "
           },

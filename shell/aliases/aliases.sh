@@ -52,7 +52,8 @@ alias gclean='git clean -fd'
 # bun (package manager)
 # ---------------------------------------------------------------------------
 alias b='bun'
-alias bd='bun dev'
+# note: 'bd' is the Beads issue-tracker CLI, so bun dev lives on 'bdev'
+alias bdev='bun dev'
 alias ba='bun add'
 alias bad='bun add -d'
 alias br='bun run'

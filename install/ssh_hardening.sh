@@ -53,22 +53,91 @@ fi
 ask "Verify key login works from a SECOND terminal, then press Enter to continue:"
 
 banner "4/5 — key-only auth (root login + passwords off)"
-DROPIN=/etc/ssh/sshd_config.d/99-hardening.conf
-if ! grep -qs '^Include' /etc/ssh/sshd_config; then
-  echo "adding Include line to sshd_config"
-  echo 'Include /etc/ssh/sshd_config.d/*.conf' >> /etc/ssh/sshd_config
+DROPIN=/etc/ssh/sshd_config.d/00-hardening.conf
+INCLUDE_DIRECTIVE='/etc/ssh/sshd_config.d/*.conf'
+EXPECTED_DROPIN_CONTENT=$'PermitRootLogin no\nPasswordAuthentication no\nKbdInteractiveAuthentication no'
+
+fail_ssh_config() {
+  printf '%s\n' "$1" >&2
+  exit 1
+}
+
+check_main_sshd_config() {
+  local config=/etc/ssh/sshd_config line directive argument extra seen=0
+  [[ -f "$config" && -r "$config" ]] || fail_ssh_config "cannot read $config"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%%#*}"
+    [[ "$line" =~ [^[:space:]] ]] || continue
+    IFS=$' \t\r' read -r directive argument extra <<< "$line"
+    directive="${directive,,}"
+    if (( seen == 0 )); then
+      [[ "$directive" == include && "$argument" == "$INCLUDE_DIRECTIVE" && -z "$extra" ]] ||
+        fail_ssh_config "$config must have Include $INCLUDE_DIRECTIVE as its first active directive; refusing to continue"
+      seen=1
+      continue
+    fi
+    case "$directive" in
+      match)   fail_ssh_config "active Match directive in $config; refusing to apply conditional SSH policy" ;;
+      include) fail_ssh_config "unexpected additional Include directive in $config; refusing to continue" ;;
+    esac
+  done < "$config"
+  (( seen == 1 )) || fail_ssh_config "$config is missing the required first active Include $INCLUDE_DIRECTIVE"
+}
+
+check_sshd_dropins() {
+  local file line directive argument extra
+  for file in /etc/ssh/sshd_config.d/*.conf; do
+    [[ -e "$file" || -L "$file" ]] || continue
+    [[ -f "$file" && -r "$file" ]] || fail_ssh_config "cannot read included SSH config file: $file"
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      line="${line%%#*}"
+      [[ "$line" =~ [^[:space:]] ]] || continue
+      IFS=$' \t\r' read -r directive argument extra <<< "$line"
+      case "${directive,,}" in
+        match)   fail_ssh_config "active Match directive in $file; refusing to apply conditional SSH policy" ;;
+        include) fail_ssh_config "unexpected or nested Include directive in $file; refusing to continue" ;;
+      esac
+    done < "$file"
+  done
+}
+
+check_main_sshd_config
+
+if [[ -L "$DROPIN" ]]; then
+  fail_ssh_config "refusing to follow symlink at $DROPIN"
+elif [[ -e "$DROPIN" ]]; then
+  [[ -f "$DROPIN" ]] || fail_ssh_config "refusing to overwrite non-regular file at $DROPIN"
+  if ! printf '%s\n' "$EXPECTED_DROPIN_CONTENT" | cmp -s "$DROPIN" -; then
+    fail_ssh_config "refusing to overwrite non-identical $DROPIN"
+  fi
 fi
-cat > "$DROPIN" <<'EOF'
-PermitRootLogin no
-PasswordAuthentication no
-KbdInteractiveAuthentication no
-EOF
+
+check_sshd_dropins
+
+if [[ ! -e "$DROPIN" ]]; then
+  if ! (umask 077; set -o noclobber; printf '%s\n' "$EXPECTED_DROPIN_CONTENT" > "$DROPIN"); then
+    fail_ssh_config "could not safely create $DROPIN"
+  fi
+fi
 chmod 600 "$DROPIN"
 
 if ! sshd -t; then
   echo "sshd config failed validation — NOT restarting. Check $DROPIN" >&2
   exit 1
 fi
+if ! EFFECTIVE_CONFIG="$(sshd -T 2>&1)"; then
+  printf 'sshd -T failed — NOT restarting\n%s\n' "$EFFECTIVE_CONFIG" >&2
+  exit 1
+fi
+for setting in \
+  'permitrootlogin no' \
+  'passwordauthentication no' \
+  'kbdinteractiveauthentication no'; do
+  if ! printf '%s\n' "$EFFECTIVE_CONFIG" | grep -Fx -- "$setting" >/dev/null; then
+    printf "effective sshd config is missing '%s' — NOT restarting\n" "$setting" >&2
+    exit 1
+  fi
+done
 echo "config valid — restarting sshd"
 systemctl restart ssh 2>/dev/null || systemctl restart sshd
 

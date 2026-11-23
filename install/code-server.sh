@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+# /usr/bin/env bash
 # install/code-server.sh — install code-server (web VS Code), rootless.
 #
 # Just the official installer now (handles arch detection + latest lookup):

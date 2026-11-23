@@ -26,7 +26,7 @@ Config lives in the repo and is symlinked into place by `install/bootstrap`:
 
 | File                        | Purpose                                                      |
 |-----------------------------|--------------------------------------------------------------|
-| `install/setup`             | Entry point: detects platform + package manager, runs steps  |
+| `install/setup`             | Entry point: detects platform + package manager, interactive (gum) or --apply, provisions gum/JS runtime, runs steps with progress |
 | `install/bootstrap`         | Idempotent symlink bootstrap (backs up existing files)       |
 | `install/git.sh`            | Linux/macOS git identity via `gh`, ed25519 SSH key           |
 | `install/git.ps1`           | Windows git identity via `gh` (no tokens, no PAT-in-URL)     |
@@ -43,9 +43,9 @@ repo (see `.gitignore`):
   by `install/fetch.sh`: `zsh-autosuggestions` (v0.7.1) and
   `zsh-syntax-highlighting` (0.8.0). `shell/zsh/zshrc` sources them if present.
 - **Agent skills** — installed into repo-local `.agents/` and `.claude/`
-  (git-ignored) from the skills.sh registry via `npx skills add`; existing
+  (git-ignored) from the skills.sh registry via `bunx skills add` (or `npx` fallback); existing
   installs are restored from the committed `skills-lock.json` via
-  `npx skills experimental_install`.
+  `bunx skills experimental_install` (or `npx` fallback).
 - **Vendored exception** — `ai-tools/skills/alchemy-cloudflare` is checked in
   because it is not on the registry.
 
@@ -67,6 +67,10 @@ and `pi-bin` from the AUR on Arch; `neovim`, `kitty`, `nodejs`/`npm`, `ripgrep`,
 `fd`, `gh` and `gum` from your package manager), symlinks the configs via
 `install/bootstrap`, installs the pi extensions' npm dependency, and sets up git
 identity.
+
+Interactive mode requires [gum](https://github.com/charmbracelet/gum) — it is auto-installed via your OS package manager when possible (apt, dnf, zypper, pacman, brew, or Termux pkg). If gum cannot be installed automatically, setup prints manual instructions and exits. `--apply` is non-interactive and does not require gum.
+
+The fetch step needs a JavaScript runtime. Setup prefers [bun](https://bun.sh) (auto-installed via OS packages) and falls back to Node.js/npm. If neither can be installed, the fetch step is skipped with guidance on what to install.
 
 ## On ML4W Hyprland machines
 
@@ -117,10 +121,10 @@ that already points at the repo is skipped. Re-running it is safe.
 
 | Platform  | How                                                              |
 |-----------|------------------------------------------------------------------|
-| Linux     | `install/setup` picks apt/dnf/zypper/pacman automatically         |
-| macOS     | Same flow via Homebrew (`install/setup` installs git, gh, oh-my-posh, fastfetch) |
+| Linux     | `install/setup` picks apt/dnf/zypper/pacman automatically; gum + bun/Node auto-provisioned |
+| macOS     | Same flow via Homebrew (`install/setup` installs git, gh, oh-my-posh, fastfetch); gum + bun auto-provisioned via brew |
 | Windows   | PowerShell: `install/git.ps1` (needs gh) + `winget install JanDeDobbeleer.OhMyPosh` for the same prompt. Shell configs + config dirs: run `install/setup` inside WSL, or `mklink` manually |
-| Termux    | `install/setup` (pkg branch), plus optional `install/termux/setup-ubuntu.sh` for a proot Ubuntu server |
+| Termux    | `install/setup` (pkg branch), plus optional `install/termux/setup-ubuntu.sh` for a proot Ubuntu server; gum + bun/Node via pkg |
 | Servers   | `install/ssh_hardening.sh` (Debian/Ubuntu): non-root sudo user, key-only SSH, optional fail2ban + ufw |
 
 ## Git setup — `gh`, never tokens
